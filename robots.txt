@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://simonbermudez.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Disallow access to build files and source code
+Disallow: /app/src/
+Disallow: /gulp/
+Disallow: /node_modules/
+Disallow: /*.json$
+Disallow: /*.js$
+Disallow: /*.less$
+
+# Allow access to essential assets
+Allow: /app/public/
+Allow: /app/dist/
+Allow: /favicon.ico
