@@ -255,73 +255,82 @@ var SCENE = (function () {
         var minSwipeDistance = 50;
         var lastTouchY = 0;
         var touchVelocity = 0;
+        
+        // Add light throttling for mobile touch events
+        var lastTouchTime = new Date();
 
         function onTouchStart(event) {
           touchStartY = event.originalEvent.touches[0].clientY;
           lastTouchY = touchStartY;
           touchVelocity = 0;
+          lastTouchTime = new Date();
         }
 
         function onTouchMove(event) {
           if (MobileUtils.isMobile()) {
-            // Skip horizontal camera movement tracking on mobile
-            // Only handle vertical scrolling
+            // Light throttling for mobile - more responsive than before
+            var currentTime = new Date();
+            var elapsed = currentTime.getTime() - lastTouchTime.getTime();
             
-            // Free-form scrolling on mobile
-            var currentTouchY = event.originalEvent.touches[0].clientY;
-            var deltaY = lastTouchY - currentTouchY;
-            touchVelocity = deltaY;
-            
-            // Only process if we have significant movement
-            if (Math.abs(deltaY) > 1) {
-              // Calculate new camera position based on touch movement
-              var sensitivity = 0.12; // Increased sensitivity for faster mobile scrolling
-              var newCameraY = camera.position.y - (deltaY * sensitivity);
+            // Reduced throttling and allow touches during momentum for better responsiveness
+            if (elapsed > 0) { // Reduced from 8ms to 4ms for better touch detection
+              var currentTouchY = event.originalEvent.touches[0].clientY;
+              var deltaY = lastTouchY - currentTouchY;
+              touchVelocity = deltaY;
               
-              // Constrain to section bounds
-              var maxY = parameters.sectionHeight;
-              var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
-              newCameraY = Math.max(minY, Math.min(maxY, newCameraY));
-              
-              // Directly update camera position for immediate response
-              camera.position.y = newCameraY;
-              
-              // Update current section index based on position
-              var newIndex = Math.round(-newCameraY / parameters.sectionHeight);
-              newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
-              
-              if (newIndex !== currentIndex) {
-                var previousIndexLocal = currentIndex;
-                currentIndex = newIndex;
+              // Process even small movements for smooth feel
+              if (Math.abs(deltaY) > 0.2) { // Reduced threshold for better responsiveness
+                // Calculate new camera position based on touch movement
+                var sensitivity = 0.12; // Slightly reduced for smoother control
+                var newCameraY = camera.position.y - (deltaY * sensitivity);
                 
-                // Trigger section change events for smooth transitions
-                var way = newIndex < previousIndexLocal ? -1 : 1;
-                var data = {
-                  from: {
-                    name: sectionsMap[previousIndexLocal],
-                    index: previousIndexLocal
-                  },
-                  to: {
-                    name: sectionsMap[newIndex],
-                    index: newIndex
-                  },
-                  way: way === -1 ? 'up' : 'down'
-                };
+                // Constrain to section bounds
+                var maxY = parameters.sectionHeight;
+                var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
+                newCameraY = Math.max(minY, Math.min(maxY, newCameraY));
                 
-                events.trigger('section:changeBegin', data);
+                // Direct camera position update for immediate response
+                camera.position.y = newCameraY;
+                
+                // Update current section index based on position
+                var newIndex = Math.round(-camera.position.y / parameters.sectionHeight);
+                newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+                
+                if (newIndex !== currentIndex) {
+                  var previousIndexLocal = currentIndex;
+                  currentIndex = newIndex;
+                  
+                  // Trigger section change events for smooth transitions
+                  var way = newIndex < previousIndexLocal ? -1 : 1;
+                  var data = {
+                    from: {
+                      name: sectionsMap[previousIndexLocal],
+                      index: previousIndexLocal
+                    },
+                    to: {
+                      name: sectionsMap[newIndex],
+                      index: newIndex
+                    },
+                    way: way === -1 ? 'up' : 'down'
+                  };
+                  
+                  events.trigger('section:changeBegin', data);
+                }
               }
+              
+              lastTouchY = currentTouchY;
+              lastTouchTime = currentTime;
             }
             
-            lastTouchY = currentTouchY;
             event.preventDefault(); // Prevent default scrolling
           }
         }
 
         function onTouchEnd(event) {
           if (MobileUtils.isMobile()) {
-            // Add momentum scrolling for mobile
-            if (Math.abs(touchVelocity) > 3) { // Lower threshold for momentum
-              var momentum = touchVelocity * 0.6; // Increased momentum factor for faster scrolling
+            // Add momentum scrolling for mobile with lower threshold
+            if (Math.abs(touchVelocity) > 1.5) { // Lower threshold for more responsive momentum
+              var momentum = touchVelocity * 0.6; // Moderate momentum factor
               var targetY = camera.position.y - momentum;
               
               // Constrain momentum to section bounds
@@ -329,8 +338,8 @@ var SCENE = (function () {
               var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
               targetY = Math.max(minY, Math.min(maxY, targetY));
               
-              // Animate to momentum target with faster animation
-              TweenLite.to(camera.position, 0.6, { // Reduced duration for faster response
+              // Animate to momentum target with quick response
+              TweenLite.to(camera.position, 0.6, { // Faster momentum animation
                 y: targetY, 
                 ease: window.Quart.easeOut,
                 onUpdate: function() {
