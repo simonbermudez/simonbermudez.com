@@ -21,7 +21,11 @@
   <link rel="icon" type="image/png" href="./app/public/favicons/favicon-32x32.png" sizes="32x32">
   <meta name="msapplication-TileColor" content="#2d89ef">
   <meta name="msapplication-TileImage" content="./app/public/favicons/mstile-144x144.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' 'unsafe-inline'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; frame-src 'none';">
 </head>
 <body>
   <div class="loader">
@@ -74,7 +78,7 @@
       jsPayload.async = jsPayload.defer = false;
 
       var prefix;
-      if (webGL() && !mobile()) {
+      if (webGL()) {
         prefix = '3D';
       } else {
         prefix = '2D';

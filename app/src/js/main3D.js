@@ -17,6 +17,8 @@ var HASH = require('./modules/hashModule');
 
 var ImagesLoader = require('./classes/LoaderClass');
 
+var MobileUtils = require('./utils/mobileUtils');
+
 var Loader = require('./objects2D/LoaderObject2D');
 var Menu = require('./objects2D/menuObject2D');
 var Help = require('./objects2D/HelpObject2D');
@@ -39,6 +41,11 @@ var endSection = require('./sections/endSection');
 
 jQuery(function () {
   HASH.replacePlaceholders();
+
+  // Add mobile class to body if on mobile device
+  if (MobileUtils.isMobile()) {
+    jQuery('body').addClass('mobile');
+  }
 
   var loader = new Loader();
   var help = new Help();

@@ -15,6 +15,8 @@ var MapObj = require('../objects2D/MapObject2D');
 var BackgroundParticles = require('../objects3D/BackgroundParticlesObject3D');
 var BackgroundLines = require('../objects3D/BackgroundLinesObject3D');
 
+var MobileUtils = require('../utils/mobileUtils');
+
 /**
  * 3D Scene
  *
@@ -27,11 +29,18 @@ var SCENE = (function () {
   var instance;
 
   function init () {
+    // Get mobile optimizations
+    var mobileOpts = MobileUtils.getOptimizations();
+    
     // params
     var parameters = {
       fogColor: '#0a0a0a',
-      quality: 1,
-      sectionHeight: 50
+      quality: mobileOpts.quality,
+      sectionHeight: 50,
+      particleCount: mobileOpts.particles,
+      backgroundLineCount: mobileOpts.backgroundLines,
+      antialias: mobileOpts.antialias,
+      shadowMap: mobileOpts.shadowMap
     };
 
     // DOM element
@@ -135,6 +144,35 @@ var SCENE = (function () {
 
       $viewport.on('DOMMouseScroll mousewheel', onScroll);
       jQuery(document).on('keydown', onKeyDown);
+
+      // Add touch navigation for mobile devices
+      if (MobileUtils.isTouchCapable()) {
+        var touchStartY = 0;
+        var touchEndY = 0;
+        var minSwipeDistance = 50;
+
+        function onTouchStart(event) {
+          touchStartY = event.originalEvent.touches[0].clientY;
+        }
+
+        function onTouchEnd(event) {
+          touchEndY = event.originalEvent.changedTouches[0].clientY;
+          var swipeDistance = Math.abs(touchEndY - touchStartY);
+          
+          if (swipeDistance > minSwipeDistance && !isScrolling && isActive) {
+            if (touchEndY < touchStartY) {
+              // Swipe up - go to next section
+              next();
+            } else if (touchEndY > touchStartY) {
+              // Swipe down - go to previous section
+              prev();
+            }
+          }
+        }
+
+        $viewport.on('touchstart', onTouchStart);
+        $viewport.on('touchend', onTouchEnd);
+      }
     }
 
     function setup () {
@@ -147,7 +185,7 @@ var SCENE = (function () {
 
       renderer = new THREE.WebGLRenderer({
         alpha: false,
-        antialias: false
+        antialias: parameters.antialias
       });
       // for transparent bg, also set alpha: true
       // renderer.setClearColor(0x000000, 0);
@@ -169,8 +207,19 @@ var SCENE = (function () {
         mouseX = (event.clientX / window.innerWidth) * 2 - 1;
       }
 
+      function onTouchMove (event) {
+        if (event.originalEvent.touches.length === 1) {
+          var touch = event.originalEvent.touches[0];
+          mouseX = (touch.clientX / window.innerWidth) * 2 - 1;
+        }
+      }
+
       jQuery(window).on('resize', onResize);
       $viewport.on('mousemove', onMouseMove);
+      
+      if (MobileUtils.isTouchCapable()) {
+        $viewport.on('touchmove', onTouchMove);
+      }
 
       navigation();
       draw();
@@ -186,10 +235,10 @@ var SCENE = (function () {
         (-sections.length * parameters.sectionHeight) - parameters.sectionHeight
       ];
 
-      var backgroundParticles = new BackgroundParticles({ rangeY: rangeY, count: 1000 });
+      var backgroundParticles = new BackgroundParticles({ rangeY: rangeY, count: parameters.particleCount });
       scene.add(backgroundParticles.el);
 
-      backgroundLines = new BackgroundLines({ rangeY: rangeY, count: 200 });
+      backgroundLines = new BackgroundLines({ rangeY: rangeY, count: parameters.backgroundLineCount });
       scene.add(backgroundLines.el);
     }
 

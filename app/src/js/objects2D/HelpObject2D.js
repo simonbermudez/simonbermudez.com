@@ -1,6 +1,7 @@
 'use strict';
 
 var jQuery = require('jquery');
+var MobileUtils = require('../utils/mobileUtils');
 
 var Slider = require('../libs/sliderLib');
 
@@ -18,6 +19,7 @@ var Keys = require('../objects2D/KeysObject2D');
 function Help () {
   this.$el = jQuery('.help');
   this.slider = new Slider(this.$el.find('.slider'));
+  this.isMobile = MobileUtils.isMobile();
 
   this.keys = new Keys(this.$el.find('.keys'));
   this.mouse = new Mouse(this.$el.find('.mouse'));
@@ -38,18 +40,21 @@ Help.prototype.in = function () {
     .animate({ top: '50%', opacity: 1 }, 500);
 
   this.$el.stop().animate({ opacity: 0.9 }, 500, function () {
-    this.keys.start();
-    this.mouse.start();
+    // Only show keyboard/mouse help on desktop
+    if (!this.isMobile) {
+      this.keys.start();
+      this.mouse.start();
+    }
     this.layout.start();
   }.bind(this));
 
-  this.$el.on('click', function (event) {
+  this.$el.on('click touchend', function (event) {
     if (event.target === this) {
       this.out();
     }
   }.bind(this));
 
-  this.$el.find('.help__quit').on('click', function () {
+  this.$el.find('.help__quit').on('click touchend', function () {
     this.out();
   }.bind(this));
 };
@@ -70,8 +75,8 @@ Help.prototype.out = function () {
     this.layout.stop();
   }.bind(this));
 
-  this.$el.off('click');
-  this.$el.find('.help__quit').off('click');
+  this.$el.off('click touchend');
+  this.$el.find('.help__quit').off('click touchend');
 };
 
 module.exports = Help;
