@@ -1,6 +1,7 @@
 'use strict';
 
 var Section = require('../classes/SectionClass');
+var MobileUtils = require('../utils/mobileUtils');
 
 var TextPanel = require('../objects3D/TextPanelObject3D');
 var Ball = require('../objects3D/BallObject3D');
@@ -22,17 +23,21 @@ grid.el.rotation.set(1.5, 1, 2);
 grid.el.position.x = -20;
 ballSection.add(grid.el);
 
+// Mobile-responsive text settings
+var isMobile = MobileUtils.isMobile();
+var textOptions = {
+  align: 'center', // Always center on mobile
+  style: isMobile ? 'Bold' : '',
+  size: isMobile ? 30 : 50, // Smaller text on mobile
+  lineSpacing: isMobile ? 25 : 40 // Reduced line spacing on mobile
+};
+
 var text = new TextPanel(
   'G  I  V  E \n S  H  A  P  E',
-  {
-    align: 'left',
-    style: '',
-    size: 50,
-    lineSpacing: 40
-  }
+  textOptions
 );
-text.el.position.set(15, 0, 15);
-text.el.rotation.y = -0.4;
+text.el.position.set(isMobile ? 0 : 15, 0, 15);
+text.el.rotation.y = isMobile ? 0 : -0.4; // No rotation on mobile for better readability
 ballSection.add(text.el);
 
 ball.el.visible = false;

@@ -3,6 +3,7 @@
 var THREE = require('three');
 
 var Section = require('../classes/SectionClass');
+var MobileUtils = require('../utils/mobileUtils');
 
 var FlowField = require('../objects3D/FlowFieldObject3D');
 var TextPanel = require('../objects3D/TextPanelObject3D');
@@ -21,17 +22,21 @@ var field = new FlowField(points, {
 });
 flowSection.add(field.el);
 
+// Mobile-responsive text settings
+var isMobile = MobileUtils.isMobile();
+var textOptions = {
+  align: 'center', // Keep center alignment
+  style: isMobile ? 'Bold' : '',
+  size: isMobile ? 30 : 50, // Smaller text on mobile
+  lineSpacing: isMobile ? 25 : 40 // Reduced line spacing on mobile
+};
+
 var text = new TextPanel(
   'F  O  L  L  O  W \n T  H  E    T  R  E  N  D  S',
-  {
-    align: 'center',
-    style: '',
-    size: 50,
-    lineSpacing: 40
-  }
+  textOptions
 );
 text.el.position.z = -10;
-text.el.rotation.y = 0.4;
+text.el.rotation.y = isMobile ? 0 : 0.4; // No rotation on mobile for better readability
 flowSection.add(text.el);
 
 field.el.visible = false;
