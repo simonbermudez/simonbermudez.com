@@ -69,7 +69,6 @@ jQuery(function () {
 
     TweenLite.delayedCall(0.8, SCENE.in);
     TweenLite.delayedCall(1.5, function () {
-      map.in();
       menu.in();
     });
   });
@@ -392,21 +391,6 @@ jQuery(function () {
   SCENE.on('end', function () {
     SCENE.lock();
     APP.slide(SCENE.unlock);
-  });
-
-  // map
-  var map = SCENE.getMap();
-
-  $heads.prepend(map.$el);
-
-  map.init();
-
-  map.onClick(function (index) {
-    SCENE.goTo(index);
-  });
-
-  SCENE.on('section:changeBegin', function () {
-    map.setActive(this.to.index);
   });
 
   // tails

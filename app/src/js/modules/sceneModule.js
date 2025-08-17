@@ -112,37 +112,140 @@ var SCENE = (function () {
       var oldDate = new Date();
       
       function onScroll (event) {
+        event.preventDefault();
+        
         newDate = new Date();
-
         var elapsed = newDate.getTime() - oldDate.getTime();
 
-        // handle scroll smoothing (mac trackpad for instance)
-        if (elapsed > 50 && !isScrolling) {
-          if (event.originalEvent.detail > 0 || event.originalEvent.wheelDelta < 0) {
-            next();
-          } else {
-            prev();
+        // Free scroll implementation for all devices
+        if (elapsed > 8 && !isScrolling) { // Increased frequency for smoother scrolling
+          var delta = 0;
+          
+          // Better mouse wheel detection
+          if (event.originalEvent.wheelDelta) {
+            delta = event.originalEvent.wheelDelta / 120;
+          } else if (event.originalEvent.deltaY) {
+            delta = -event.originalEvent.deltaY / 100;
+          } else if (event.originalEvent.detail) {
+            delta = -event.originalEvent.detail / 3;
+          }
+
+          // Apply scroll movement with improved sensitivity
+          var scrollSpeed = 4; // Increased sensitivity for faster scrolling
+          var newCameraY = camera.position.y + (delta * scrollSpeed);
+          
+          // Constrain to section bounds
+          var maxY = parameters.sectionHeight;
+          var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
+          newCameraY = Math.max(minY, Math.min(maxY, newCameraY));
+          
+          // Update camera position directly for immediate response
+          camera.position.y = newCameraY;
+          
+          // Update section tracking
+          var newIndex = Math.round(-camera.position.y / parameters.sectionHeight);
+          newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+          
+          if (newIndex !== currentIndex) {
+            var previousIndexLocal = currentIndex;
+            currentIndex = newIndex;
+            
+            var way = newIndex < previousIndexLocal ? -1 : 1;
+            var data = {
+              from: {
+                name: sectionsMap[previousIndexLocal],
+                index: previousIndexLocal
+              },
+              to: {
+                name: sectionsMap[newIndex],
+                index: newIndex
+              },
+              way: way === -1 ? 'up' : 'down'
+            };
+            
+            events.trigger('section:changeBegin', data);
           }
         }
 
         oldDate = new Date();
-
         return false;
       }
 
       function onKeyDown (event) {
+        // Enable smooth keyboard navigation for all devices
         if (!isScrolling && isActive) {
           var keyCode = event.keyCode;
+          var scrollAmount = parameters.sectionHeight * 0.3; // Smaller increments for smoother movement
           
-          if (keyCode === 40) {
-            next();
-          } else if (keyCode === 38) {
-            prev();
+          if (keyCode === 40) { // Down arrow
+            var newCameraY = camera.position.y - scrollAmount;
+            var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
+            newCameraY = Math.max(minY, newCameraY);
+            
+            TweenLite.to(camera.position, 0.5, { 
+              y: newCameraY,
+              ease: window.Quart.easeOut,
+              onUpdate: function() {
+                var newIndex = Math.round(-camera.position.y / parameters.sectionHeight);
+                newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+                
+                if (newIndex !== currentIndex) {
+                  var previousIndexLocal = currentIndex;
+                  currentIndex = newIndex;
+                  
+                  var data = {
+                    from: {
+                      name: sectionsMap[previousIndexLocal],
+                      index: previousIndexLocal
+                    },
+                    to: {
+                      name: sectionsMap[newIndex],
+                      index: newIndex
+                    },
+                    way: 'down'
+                  };
+                  
+                  events.trigger('section:changeBegin', data);
+                }
+              }
+            });
+          } else if (keyCode === 38) { // Up arrow
+            var newCameraY = camera.position.y + scrollAmount;
+            var maxY = parameters.sectionHeight;
+            newCameraY = Math.min(maxY, newCameraY);
+            
+            TweenLite.to(camera.position, 0.5, { 
+              y: newCameraY,
+              ease: window.Quart.easeOut,
+              onUpdate: function() {
+                var newIndex = Math.round(-camera.position.y / parameters.sectionHeight);
+                newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+                
+                if (newIndex !== currentIndex) {
+                  var previousIndexLocal = currentIndex;
+                  currentIndex = newIndex;
+                  
+                  var data = {
+                    from: {
+                      name: sectionsMap[previousIndexLocal],
+                      index: previousIndexLocal
+                    },
+                    to: {
+                      name: sectionsMap[newIndex],
+                      index: newIndex
+                    },
+                    way: 'up'
+                  };
+                  
+                  events.trigger('section:changeBegin', data);
+                }
+              }
+            });
           }
         }
       }
 
-      $viewport.on('DOMMouseScroll mousewheel', onScroll);
+      $viewport.on('DOMMouseScroll mousewheel wheel', onScroll);
       jQuery(document).on('keydown', onKeyDown);
 
       // Add touch navigation for mobile devices
@@ -150,27 +253,136 @@ var SCENE = (function () {
         var touchStartY = 0;
         var touchEndY = 0;
         var minSwipeDistance = 50;
+        var lastTouchY = 0;
+        var touchVelocity = 0;
 
         function onTouchStart(event) {
           touchStartY = event.originalEvent.touches[0].clientY;
+          lastTouchY = touchStartY;
+          touchVelocity = 0;
+        }
+
+        function onTouchMove(event) {
+          if (MobileUtils.isMobile()) {
+            // Handle mouse tracking for horizontal camera movement
+            if (event.originalEvent.touches.length === 1) {
+              var touch = event.originalEvent.touches[0];
+              mouseX = (touch.clientX / window.innerWidth) * 2 - 1;
+            }
+            
+            // Free-form scrolling on mobile
+            var currentTouchY = event.originalEvent.touches[0].clientY;
+            var deltaY = lastTouchY - currentTouchY;
+            touchVelocity = deltaY;
+            
+            // Only process if we have significant movement
+            if (Math.abs(deltaY) > 1) {
+              // Calculate new camera position based on touch movement
+              var sensitivity = 0.12; // Increased sensitivity for faster mobile scrolling
+              var newCameraY = camera.position.y - (deltaY * sensitivity);
+              
+              // Constrain to section bounds
+              var maxY = parameters.sectionHeight;
+              var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
+              newCameraY = Math.max(minY, Math.min(maxY, newCameraY));
+              
+              // Directly update camera position for immediate response
+              camera.position.y = newCameraY;
+              
+              // Update current section index based on position
+              var newIndex = Math.round(-newCameraY / parameters.sectionHeight);
+              newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+              
+              if (newIndex !== currentIndex) {
+                var previousIndexLocal = currentIndex;
+                currentIndex = newIndex;
+                
+                // Trigger section change events for smooth transitions
+                var way = newIndex < previousIndexLocal ? -1 : 1;
+                var data = {
+                  from: {
+                    name: sectionsMap[previousIndexLocal],
+                    index: previousIndexLocal
+                  },
+                  to: {
+                    name: sectionsMap[newIndex],
+                    index: newIndex
+                  },
+                  way: way === -1 ? 'up' : 'down'
+                };
+                
+                events.trigger('section:changeBegin', data);
+              }
+            }
+            
+            lastTouchY = currentTouchY;
+            event.preventDefault(); // Prevent default scrolling
+          }
         }
 
         function onTouchEnd(event) {
-          touchEndY = event.originalEvent.changedTouches[0].clientY;
-          var swipeDistance = Math.abs(touchEndY - touchStartY);
-          
-          if (swipeDistance > minSwipeDistance && !isScrolling && isActive) {
-            if (touchEndY < touchStartY) {
-              // Swipe up - go to next section
-              next();
-            } else if (touchEndY > touchStartY) {
-              // Swipe down - go to previous section
-              prev();
+          if (MobileUtils.isMobile()) {
+            // Add momentum scrolling for mobile
+            if (Math.abs(touchVelocity) > 3) { // Lower threshold for momentum
+              var momentum = touchVelocity * 0.6; // Increased momentum factor for faster scrolling
+              var targetY = camera.position.y - momentum;
+              
+              // Constrain momentum to section bounds
+              var maxY = parameters.sectionHeight;
+              var minY = (-sections.length * parameters.sectionHeight) - parameters.sectionHeight;
+              targetY = Math.max(minY, Math.min(maxY, targetY));
+              
+              // Animate to momentum target with faster animation
+              TweenLite.to(camera.position, 0.6, { // Reduced duration for faster response
+                y: targetY, 
+                ease: window.Quart.easeOut,
+                onUpdate: function() {
+                  // Update section tracking during momentum scroll
+                  var newIndex = Math.round(-camera.position.y / parameters.sectionHeight);
+                  newIndex = Math.max(0, Math.min(sections.length - 1, newIndex));
+                  
+                  if (newIndex !== currentIndex) {
+                    var previousIndexLocal = currentIndex;
+                    currentIndex = newIndex;
+                    
+                    var way = newIndex < previousIndexLocal ? -1 : 1;
+                    var data = {
+                      from: {
+                        name: sectionsMap[previousIndexLocal],
+                        index: previousIndexLocal
+                      },
+                      to: {
+                        name: sectionsMap[newIndex],
+                        index: newIndex
+                      },
+                      way: way === -1 ? 'up' : 'down'
+                    };
+                    
+                    events.trigger('section:changeBegin', data);
+                  }
+                }
+              });
+            }
+            touchVelocity = 0;
+          } else {
+            // Original swipe navigation for tablets and touch-capable desktops
+            touchEndY = event.originalEvent.changedTouches[0].clientY;
+            var swipeDistance = Math.abs(touchEndY - touchStartY);
+            
+            if (swipeDistance > minSwipeDistance && !isScrolling && isActive) {
+              if (touchEndY < touchStartY) {
+                // Swipe up - go to next section
+                next();
+              } else if (touchEndY > touchStartY) {
+                // Swipe down - go to previous section
+                prev();
+              }
             }
           }
         }
 
         $viewport.on('touchstart', onTouchStart);
+        $viewport.on('touchmove', onTouchMove);
         $viewport.on('touchend', onTouchEnd);
       }
     }
@@ -217,7 +429,8 @@ var SCENE = (function () {
       jQuery(window).on('resize', onResize);
       $viewport.on('mousemove', onMouseMove);
       
-      if (MobileUtils.isTouchCapable()) {
+      if (MobileUtils.isTouchCapable() && !MobileUtils.isMobile()) {
+        // Only bind for mouse tracking on non-mobile touch devices (like tablets)
         $viewport.on('touchmove', onTouchMove);
       }
 
