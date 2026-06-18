@@ -1,19 +1,22 @@
 //
 // ABOUT / PORTFOLIO panel (the `.tails` view).
 //
+// Styled to match the presentation (the "heads" experience): monochrome
+// white-on-black, thin Futura headings, wide letter-spacing, hairline rules.
 // Crisp, accessible DOM content composited over a live three.js backdrop
-// (see app/src/js/modules/aboutModule.js). Dark glassmorphism so the WebGL
-// scene reads through behind the text while copy stays legible.
+// (see app/src/js/modules/aboutModule.js); the interaction layer lives in
+// app/src/js/modules/aboutInteractionsModule.js.
 //
 
-@about-bg:        #06070c;
-@about-text:      #e9edf6;
-@about-muted:     #8b93a7;
-@about-cyan:      #00d8f0;
-@about-magenta:   #c44bff;
-@about-glass:     rgba(16, 20, 32, 0.55);
-@about-glass-soft: rgba(16, 20, 32, 0.35);
-@about-border:    rgba(255, 255, 255, 0.09);
+@about-bg:        #0a0a0a;
+@about-text:      #ffffff;
+@about-muted:     rgba(255, 255, 255, 0.5);
+@about-faint:     rgba(255, 255, 255, 0.32);
+@about-line:      rgba(255, 255, 255, 0.14);
+@about-line-hot:  rgba(255, 255, 255, 0.55);
+@about-surface:   rgba(255, 255, 255, 0.03);
+
+@about-futura: Futura, 'Trebuchet MS', Arial, sans-serif;
 
 // The tails panel itself ---------------------------------------------------
 .tails.about {
@@ -21,6 +24,12 @@
   color: @about-text;
 
   -webkit-overflow-scrolling: touch;
+}
+
+// Hide the native cursor when the custom one is active.
+.tails.about.has-cursor,
+.tails.about.has-cursor * {
+  cursor: none !important;
 }
 
 // Pinned WebGL backdrop: sticky inside the scroll container, pulled back up
@@ -36,11 +45,7 @@
 
   pointer-events: none;
 
-  // CSS fallback gradient if WebGL is unavailable.
-  background:
-    radial-gradient(120% 80% at 70% 0%, rgba(196, 75, 255, 0.18), transparent 60%),
-    radial-gradient(120% 90% at 20% 100%, rgba(0, 216, 240, 0.16), transparent 55%),
-    @about-bg;
+  background: @about-bg; // CSS fallback if WebGL is unavailable
 }
 
 .about__bg canvas {
@@ -55,33 +60,76 @@
   z-index: 1;
 }
 
+// Custom cursor ------------------------------------------------------------
+.about__cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+
+  width: 34px;
+  height: 34px;
+
+  pointer-events: none;
+
+  border: 1px solid #fff;
+  border-radius: 50%;
+
+  mix-blend-mode: difference;
+
+  transition: width 0.3s, height 0.3s, background-color 0.3s;
+}
+
+.about__cursor.is-active {
+  width: 58px;
+  height: 58px;
+
+  background-color: #fff;
+}
+
 // Section scaffold ---------------------------------------------------------
 .about .tails__section {
   max-width: 1140px;
   margin: 0 auto;
-  padding: 96px 44px;
+  padding: 110px 44px;
 
   text-align: left;
 }
 
 .about__h2 {
+  font-family: @about-futura;
   font-size: 13px;
   font-weight: 400;
 
-  margin: 0 0 44px;
+  margin: 0 0 50px;
 
-  letter-spacing: 6px;
+  letter-spacing: 8px;
   text-transform: uppercase;
-  color: @about-cyan;
+  color: @about-text;
+}
+
+// Hairline rule under section labels, like the presentation's thin lines.
+.about__h2:after {
+  content: '';
+
+  display: block;
+
+  width: 60px;
+  height: 1px;
+  margin-top: 18px;
+
+  background: @about-line-hot;
 }
 
 .about__h3 {
+  font-family: @about-futura;
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 100;
 
   margin: 0 0 14px;
 
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   color: @about-text;
 }
 
@@ -99,23 +147,13 @@
   color: @about-text;
 }
 
-// Glass surface mixin ------------------------------------------------------
-.about-glass () {
-  background: @about-glass;
-  border: 1px solid @about-border;
-  border-radius: 16px;
-
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-}
-
 // Buttons ------------------------------------------------------------------
 .about__cta {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
 
-  margin-top: 34px;
+  margin-top: 40px;
 }
 
 .about__contact .about__cta {
@@ -123,41 +161,40 @@
 }
 
 .about__btn {
+  position: relative;
+
   display: inline-block;
 
-  padding: 13px 26px;
+  padding: 14px 30px;
 
-  font-size: 14px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 3px;
   text-decoration: none;
   text-transform: uppercase;
 
   color: @about-text;
-  border: 1px solid @about-border;
+  border: 1px solid @about-line-hot;
   border-radius: 40px;
+  background: transparent;
 
-  background: @about-glass-soft;
-
-  transition: transform 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+  transition: color 0.4s, background-color 0.4s, border-color 0.4s;
 }
 
 .about__btn:hover {
-  transform: translateY(-2px);
-
-  color: #fff;
-  border-color: @about-cyan;
-  box-shadow: 0 0 24px rgba(0, 216, 240, 0.35);
+  color: @about-bg;
+  background-color: #fff;
+  border-color: #fff;
 }
 
 .about__btn--primary {
-  color: #04121a;
-  border-color: transparent;
-  background: linear-gradient(120deg, @about-cyan, @about-magenta);
+  color: @about-bg;
+  background: #fff;
+  border-color: #fff;
 }
 
 .about__btn--primary:hover {
-  color: #04121a;
-  box-shadow: 0 0 34px rgba(196, 75, 255, 0.45);
+  color: #fff;
+  background: transparent;
 }
 
 // Hero ---------------------------------------------------------------------
@@ -176,46 +213,56 @@
 }
 
 .about__eyebrow {
-  margin: 0 0 18px;
+  margin: 0 0 24px;
 
-  font-size: 15px;
-  letter-spacing: 6px;
+  font-size: 14px;
+  letter-spacing: 8px;
   text-transform: uppercase;
   color: @about-muted;
 }
 
 .about__code {
-  color: @about-cyan;
+  color: @about-text;
   font-family: 'Courier New', monospace;
 }
 
 .about__name {
-  font-size: 72px;
+  font-family: @about-futura;
+  font-size: 78px;
   font-weight: 100;
   line-height: 1.02;
 
   margin: 0;
 
-  letter-spacing: 14px;
+  letter-spacing: 18px;
+  text-indent: 18px; // balance the trailing letter-spacing
   text-align: center;
   color: #fff;
+}
 
-  text-shadow: 0 0 40px rgba(0, 216, 240, 0.25);
+.about__name__char {
+  display: inline-block;
+
+  white-space: pre;
+  will-change: transform;
 }
 
 .about__role {
-  margin: 22px 0 6px;
+  margin: 28px 0 8px;
 
-  font-size: 22px;
-  letter-spacing: 4px;
+  font-size: 20px;
+  font-weight: 100;
+  letter-spacing: 6px;
+  text-transform: uppercase;
   color: @about-text;
 }
 
 .about__meta {
   margin: 0;
 
-  font-size: 14px;
-  letter-spacing: 2px;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   color: @about-muted;
 }
 
@@ -223,7 +270,7 @@
 .about__stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 0;
 }
 
 .about__stat {
@@ -233,29 +280,30 @@
 
   text-align: center;
 
-  .about-glass();
+  border-left: 1px solid @about-line;
+}
+
+.about__stat:first-child {
+  border-left: 0;
 }
 
 .about__stat__num {
   display: block;
 
-  font-family: Futura, 'Trebuchet MS', Arial, sans-serif;
-  font-size: 46px;
+  font-family: @about-futura;
+  font-size: 58px;
   font-weight: 100;
 
-  background: linear-gradient(120deg, @about-cyan, @about-magenta);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
 }
 
 .about__stat__label {
   display: block;
 
-  margin-top: 8px;
+  margin-top: 10px;
 
-  font-size: 13px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   color: @about-muted;
 }
@@ -264,13 +312,16 @@
 .about__skillgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 22px;
+  gap: 1px;
+
+  background: @about-line; // grid lines show through the gaps
+  border: 1px solid @about-line;
 }
 
 .about__skillcol {
-  padding: 26px;
+  padding: 30px;
 
-  .about-glass();
+  background: @about-bg;
 }
 
 .about__chips {
@@ -285,36 +336,36 @@
 }
 
 .about__chips li {
-  padding: 6px 13px;
+  padding: 6px 14px;
 
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 1px;
   line-height: 1.4;
 
-  color: @about-text;
-  border: 1px solid @about-border;
+  color: @about-muted;
+  border: 1px solid @about-line;
   border-radius: 30px;
-  background: rgba(0, 216, 240, 0.06);
 }
 
 // Services -----------------------------------------------------------------
 .about__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 22px;
+  gap: 20px;
 }
 
 .about__service {
-  padding: 30px;
+  padding: 34px;
 
-  .about-glass();
+  border: 1px solid @about-line;
+  background: @about-surface;
 
-  transition: transform 0.3s, border-color 0.3s;
+  transition: border-color 0.4s, background-color 0.4s;
 }
 
 .about__service:hover {
-  transform: translateY(-4px);
-  border-color: rgba(0, 216, 240, 0.4);
+  border-color: @about-line-hot;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .about__service p {
@@ -329,21 +380,22 @@
 .about__projects {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 26px;
+  gap: 24px;
 }
 
 .about__project {
   overflow: hidden;
 
-  .about-glass();
+  border: 1px solid @about-line;
+  background: @about-surface;
 
-  transition: transform 0.35s, box-shadow 0.35s, border-color 0.35s;
+  // Transform is owned by gsap (tilt); animate only colour/shadow here.
+  transition: border-color 0.4s, box-shadow 0.4s;
 }
 
 .about__project:hover {
-  transform: translateY(-6px);
-  border-color: rgba(196, 75, 255, 0.45);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(196, 75, 255, 0.18);
+  border-color: @about-line-hot;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 .about__project__media {
@@ -361,25 +413,30 @@
 
   object-fit: cover;
 
-  transition: transform 0.5s;
+  filter: grayscale(100%) contrast(1.05);
+
+  transition: transform 0.6s, filter 0.6s;
 }
 
 .about__project:hover .about__project__media img {
   transform: scale(1.06);
+
+  filter: grayscale(0%);
 }
 
 .about__project__body {
-  padding: 24px 24px 28px;
+  padding: 26px 26px 30px;
 }
 
 .about__project__title {
-  font-family: Futura, 'Trebuchet MS', Arial, sans-serif;
+  font-family: @about-futura;
   font-size: 22px;
   font-weight: 100;
 
   margin: 0 0 12px;
 
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   color: #fff;
 }
 
@@ -392,42 +449,47 @@
 }
 
 .about__project__tech {
-  font-size: 12px !important;
-  letter-spacing: 1px;
+  font-size: 11px !important;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: @about-cyan !important;
+  color: @about-faint !important;
 }
 
 .about__link {
-  font-size: 14px;
-  letter-spacing: 1px;
+  display: inline-block;
+
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   text-decoration: none;
 
   color: @about-text;
 
-  transition: color 0.3s;
+  transition: letter-spacing 0.3s, opacity 0.3s;
 }
 
 .about__link:hover {
-  color: @about-cyan;
+  letter-spacing: 4px;
+  opacity: 0.7;
 }
 
 // Testimonials -------------------------------------------------------------
 .about__quotes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 22px;
+  gap: 20px;
 }
 
 .about__quote {
   margin: 0;
-  padding: 30px;
+  padding: 34px;
 
-  .about-glass();
+  border: 1px solid @about-line;
+  background: @about-surface;
 }
 
 .about__quote p {
-  margin: 0 0 22px;
+  margin: 0 0 24px;
 
   font-size: 17px;
   line-height: 28px;
@@ -437,7 +499,7 @@
 .about__quote footer strong {
   display: block;
 
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 1px;
   color: #fff;
 }
@@ -447,21 +509,23 @@
 
   margin-top: 4px;
 
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 1px;
+  text-transform: uppercase;
   color: @about-muted;
 }
 
 // Awards -------------------------------------------------------------------
 .about__award {
-  margin-bottom: 22px;
-  padding: 30px;
+  margin-bottom: 20px;
+  padding: 34px;
 
-  .about-glass();
+  border: 1px solid @about-line;
+  background: @about-surface;
 }
 
 .about__award--feature {
-  border-color: rgba(196, 75, 255, 0.35);
+  border-color: @about-line-hot;
 }
 
 .about__award__title {
@@ -480,10 +544,10 @@
 }
 
 .about__awards__sub {
-  margin-top: 50px;
-  margin-bottom: 22px;
+  margin-top: 56px;
+  margin-bottom: 24px;
 
-  letter-spacing: 4px;
+  letter-spacing: 5px;
   text-transform: uppercase;
   color: @about-muted;
 }
@@ -491,7 +555,7 @@
 .about__gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
+  gap: 16px;
 }
 
 .about__cert {
@@ -499,14 +563,14 @@
 
   overflow: hidden;
 
-  .about-glass();
+  border: 1px solid @about-line;
+  background: @about-surface;
 
-  transition: transform 0.3s, border-color 0.3s;
+  transition: border-color 0.3s;
 }
 
 .about__cert:hover {
-  transform: translateY(-3px);
-  border-color: rgba(0, 216, 240, 0.4);
+  border-color: @about-line-hot;
 }
 
 .about__cert a {
@@ -527,8 +591,9 @@
 .about__cert figcaption {
   padding: 12px;
 
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   text-align: center;
   color: @about-muted;
 }
@@ -541,58 +606,72 @@
 }
 
 .about__contact .about__h2 {
-  font-family: Futura, 'Trebuchet MS', Arial, sans-serif;
-  font-size: 34px;
-  letter-spacing: 4px;
-  text-transform: none;
+  font-size: 38px;
+  font-weight: 100;
+  letter-spacing: 6px;
+  text-transform: uppercase;
   color: #fff;
+}
+
+.about__contact .about__h2:after {
+  margin: 22px auto 0;
 }
 
 .about__email {
   display: inline-block;
 
-  margin: 10px 0 8px;
+  margin: 12px 0 8px;
 
   font-size: 26px;
   letter-spacing: 2px;
   text-decoration: none;
 
-  color: @about-cyan;
+  color: @about-text;
 
-  transition: color 0.3s, text-shadow 0.3s;
+  transition: letter-spacing 0.3s, opacity 0.3s;
 }
 
 .about__email:hover {
-  color: #fff;
-  text-shadow: 0 0 24px rgba(0, 216, 240, 0.6);
+  letter-spacing: 4px;
+  opacity: 0.7;
 }
 
 .about__copyright {
-  margin-top: 50px;
+  margin-top: 56px;
 
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: @about-muted;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: @about-faint;
 }
 
 // Responsive ---------------------------------------------------------------
 @media screen and (max-width: 720px) {
   .about .tails__section {
-    padding: 70px 24px;
+    padding: 80px 24px;
   }
 
   .about__name {
-    font-size: 40px;
-    letter-spacing: 7px;
+    font-size: 38px;
+    letter-spacing: 8px;
+    text-indent: 8px;
   }
 
   .about__role {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .about__lead {
     font-size: 18px;
     line-height: 30px;
+  }
+
+  .about__stat {
+    flex-basis: 50%;
+  }
+
+  .about__stat__num {
+    font-size: 44px;
   }
 }
 
@@ -602,18 +681,18 @@
   .about__service,
   .about__project,
   .about__project__media img,
-  .about__cert {
+  .about__cert,
+  .about__link,
+  .about__email {
     transition: none;
-  }
-
-  .about__btn:hover,
-  .about__service:hover,
-  .about__project:hover,
-  .about__cert:hover {
-    transform: none;
   }
 
   .about__project:hover .about__project__media img {
     transform: none;
+  }
+
+  .about__link:hover,
+  .about__email:hover {
+    letter-spacing: inherit;
   }
 }

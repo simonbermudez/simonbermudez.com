@@ -25,6 +25,7 @@ import SCENE from './modules/sceneModule.js';
 import SOUNDS from './modules/soundsModule.js';
 import HASH from './modules/hashModule.js';
 import ABOUT from './modules/aboutModule.js';
+import ABOUT_FX from './modules/aboutInteractionsModule.js';
 
 import ImagesLoader from './classes/LoaderClass.js';
 
@@ -448,6 +449,7 @@ jQuery(function () {
     if (this.to === 'heads') {
       waypoint.stop();
       ABOUT.stop();
+      ABOUT_FX.stop();
 
       try {
         SOUNDS.background.fadeIn(1, 2000);
@@ -456,8 +458,9 @@ jQuery(function () {
       }
 
     } else {
-      // Spin up the about/portfolio backdrop as the panel slides in.
+      // Spin up the about/portfolio backdrop + interactions as it slides in.
       ABOUT.start($aboutBg, $tails);
+      ABOUT_FX.start($tails);
       SOUNDS.background.fadeOut(0, 2000);
     }
   });

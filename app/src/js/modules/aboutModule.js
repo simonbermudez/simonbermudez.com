@@ -83,13 +83,13 @@ var BG_FRAGMENT = [
   '  float t = uTime * 0.03;',
   '  vec2 q = p * 2.2 + vec2(t, -t * 0.6) + uMouse * 0.25;',
   '  float n = fbm(q + fbm(q * 0.5 + uScroll));',
-  '  vec3 deep = vec3(0.02, 0.03, 0.08);',
-  '  vec3 cyan = vec3(0.0, 0.85, 0.95);',
-  '  vec3 mag = vec3(0.78, 0.10, 0.95);',
+  '  vec3 deep = vec3(0.035, 0.035, 0.045);',
+  '  vec3 smoke = vec3(0.16, 0.16, 0.19);',
+  '  vec3 glow = vec3(0.92, 0.92, 1.0);',
   '  vec3 col = deep;',
-  '  col = mix(col, mag * 0.55, smoothstep(0.25, 0.9, n));',
-  '  col = mix(col, cyan * 0.6, smoothstep(0.55, 1.05, fbm(q * 1.4 + 10.0)));',
-  '  col += cyan * 0.12 * smoothstep(0.8, 1.0, fbm(p * 3.0 + uScroll * 2.0));',
+  '  col = mix(col, smoke, smoothstep(0.25, 0.95, n));',
+  '  col += glow * 0.06 * smoothstep(0.6, 1.05, fbm(q * 1.4 + 10.0));',
+  '  col += glow * 0.05 * smoothstep(0.85, 1.0, fbm(p * 3.0 + uScroll * 2.0));',
   '  float vig = smoothstep(1.25, 0.25, length(uv - 0.5));',
   '  col *= vig * 1.12;',
   '  gl_FragColor = vec4(col, 1.0);',
@@ -167,8 +167,8 @@ var ABOUT = (function () {
       var colors = new Float32Array(count * 3);
       var palette = [
         new THREE.Color('#ffffff'),
-        new THREE.Color('#7fe9ff'),
-        new THREE.Color('#c79bff')
+        new THREE.Color('#cfd6e6'),
+        new THREE.Color('#9aa3b8')
       ];
 
       for (var i = 0; i < count; i++) {
@@ -209,7 +209,7 @@ var ABOUT = (function () {
         new THREE.OctahedronGeometry(1, 0),
         new THREE.TetrahedronGeometry(1, 0)
       ];
-      var colors = ['#00d8f0', '#c44bff', '#19f5c8'];
+      var colors = ['#ffffff', '#cfd6e6', '#aab2c8'];
 
       for (var i = 0; i < 16; i++) {
         var base = geometries[Math.floor(random(0, geometries.length))];
@@ -280,9 +280,9 @@ var ABOUT = (function () {
         var frame = new THREE.LineSegments(
           new THREE.EdgesGeometry(new THREE.PlaneGeometry(16.8, 10.8)),
           new THREE.LineBasicMaterial({
-            color: i % 2 ? '#c44bff' : '#00d8f0',
+            color: '#ffffff',
             transparent: true,
-            opacity: 0.5,
+            opacity: 0.45,
             blending: THREE.AdditiveBlending,
             depthWrite: false
           })
@@ -367,20 +367,22 @@ var ABOUT = (function () {
       bgMaterial.uniforms.uMouse.value.set(mouseX, -mouseY);
 
       // Camera: gentle parallax + scroll dolly.
-      camera.position.x += (mouseX * 7 - camera.position.x) * 0.05;
-      camera.position.y += (8 - mouseY * 5 - camera.position.y) * 0.05;
+      camera.position.x += (mouseX * 11 - camera.position.x) * 0.05;
+      camera.position.y += (8 - mouseY * 7 - camera.position.y) * 0.05;
       camera.position.z = 66 - scrollValue * 22;
       camera.lookAt(0, 0, 0);
 
       // Starfield drift + parallax.
       if (stars) {
-        stars.rotation.y = t * 0.01;
+        stars.rotation.y = t * 0.01 + mouseX * 0.12;
         stars.rotation.x = -scrollValue * 0.2;
         stars.position.y = scrollValue * 40;
       }
 
-      // Tumbling shards.
+      // Tumbling shards — the whole field also leans toward the pointer.
       if (shards) {
+        shards.rotation.y += (mouseX * 0.35 - shards.rotation.y) * 0.04;
+        shards.rotation.x += (mouseY * 0.25 - shards.rotation.x) * 0.04;
         shards.children.forEach(function (s) {
           s.rotation.x += s.userData.spin.x * 0.01 * dt;
           s.rotation.y += s.userData.spin.y * 0.01 * dt;
