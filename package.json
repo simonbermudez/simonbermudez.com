@@ -25,9 +25,9 @@
   "browser": {
     "jquery": "./app/src/vendor/jquery/dist/jquery.js",
     "three": "./app/src/vendor/threejs/build/three.js",
-    "tweenlite": "./app/src/vendor/gsap/gsap.js",
-    "tweenlite.jquery": "./app/src/vendor/gsap/jquery.gsap.js",
-    "howler": "./app/src/vendor/howler/howler.js",
+    "tweenlite": "./app/src/vendor/gsap/dist/gsap.js",
+    "tweenlite.jquery": "./app/src/shims/jquery.gsap.js",
+    "howler": "./app/src/vendor/howler/dist/howler.js",
     "visibly": "./app/src/vendor/visibly.js/visibly.js",
     "skrollr": "./app/src/vendor/skrollr/src/skrollr.js"
   },

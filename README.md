@@ -3,8 +3,8 @@
 ## Requirements
 
 - Node.js (tested on Node 22) and npm
-- The front-end libraries live (vendored) in `app/src/vendor/` — see
-  [Front-end libraries](#front-end-libraries) below.
+- [Bower](https://bower.io) (`npm install -g bower`) — used to fetch the
+  front-end libraries into `app/src/vendor/`
 
 ## Instructions
 
@@ -12,6 +12,7 @@
 
 ```
 $ npm install
+$ bower install
 $ npx gulp build
 $ npx gulp bundle
 $ npx gulp serve
@@ -25,11 +26,13 @@ $ npx gulp serve
 #### Before anything
 
 ```
-$ npm install
+$ npm install     # build toolchain (gulp 5, browserify, ...)
+$ bower install   # front-end libraries -> app/src/vendor/
 ```
 
-This installs the build toolchain (gulp 5, browserify, etc.). It does **not**
-fetch the front-end libraries — see [Front-end libraries](#front-end-libraries).
+`npm install` installs the build tools; `bower install` fetches the browser
+libraries (jQuery, three.js, GSAP, howler, skrollr, normalize, visibly) into
+`app/src/vendor/`. See [Front-end libraries](#front-end-libraries) for notes.
 
 #### For development
 
@@ -64,16 +67,20 @@ Go to `localhost:8000`.
 
 ## Front-end libraries
 
-The browser libraries (jQuery, three.js, GSAP, howler, skrollr, normalize,
-visibly) are vendored under `app/src/vendor/`, which is **git-ignored** — so a
-fresh clone won't have them and the build will fail until they're present.
+The browser libraries are vendored into `app/src/vendor/` by `bower install`
+(`bower.json` pins the versions: jQuery 4, three.js r68, GSAP 3, howler 2,
+normalize 8, skrollr 0.6.30, visibly). `app/src/vendor/` is **git-ignored**, so
+run `bower install` after cloning.
 
-These were historically provisioned with `bower install`, but **bower is
-discontinued** and its registry will not resolve the current versions
-(jQuery 4, GSAP 3, howler 2, normalize 8). The working files therefore live in
-`app/src/vendor/` on disk; `bower.json` only records the intended versions.
+Two things are worth knowing:
 
-To set up `app/src/vendor/` on a new machine, copy it from a working checkout
-(or, longer term, commit it / migrate vendoring to npm). The current versions
-and the GSAP/howler compatibility notes are documented in
+- **Bower is deprecated.** It still resolves these versions today (from the
+  GitHub tags in `bower.json`) but is no longer maintained; migrating this step
+  to npm is the eventual path.
+- **GSAP needs a small compatibility shim.** GSAP 3 dropped the old
+  `jquery.gsap.js` plugin the project relied on, so a hand-written replacement
+  lives in `app/src/shims/jquery.gsap.js` (version-controlled, **not** under the
+  bower-managed `vendor/` dir). It is pulled into the vendor bundle automatically.
+
+Full upgrade details and rationale (incl. why three.js stays at r68) are in
 [`UPGRADE-NOTES.md`](UPGRADE-NOTES.md).

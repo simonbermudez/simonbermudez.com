@@ -44,9 +44,10 @@ Replaced (deprecated, no maintained successor under the old name):
 
 ## Front-end libraries
 
-`app/src/vendor/` is git-ignored (historically bower-provisioned), so the
-updated library files live on disk but are **not** committed. `bower.json` was
-updated to record intended versions.
+`app/src/vendor/` is git-ignored and provisioned by `bower install`. `bower.json`
+was updated to the new versions; bower still resolves all of them from the GitHub
+tags. The `browser` field in `package.json` points at bower's on-disk layout
+(e.g. `gsap/dist/gsap.js`, `howler/dist/howler.js`).
 
 | Library | Before | After | Notes |
 |---|---|---|---|
@@ -68,12 +69,14 @@ updated to record intended versions.
 
 ### GSAP 1.15 → 3.15
 
-GSAP 3 ships a single UMD file (`gsap.js`) that exposes the legacy globals the
-codebase relies on (`TweenLite`, the `Quad`/`Quart`/`Linear`/`Elastic` eases) and
-accepts the legacy `TweenLite.to(target, duration, vars)` signature, so the ~54
-scene tweens migrate as a drop-in. Two compatibility gaps had to be bridged in
-`app/src/vendor/gsap/jquery.gsap.js` (a hand-written shim that replaces the
-discontinued GreenSock `jquery.gsap.js` plugin):
+GSAP 3's UMD build (`app/src/vendor/gsap/dist/gsap.js`) exposes the legacy
+globals the codebase relies on (`TweenLite`, the `Quad`/`Quart`/`Linear`/`Elastic`
+eases) and accepts the legacy `TweenLite.to(target, duration, vars)` signature, so
+the ~54 scene tweens migrate as a drop-in. Two compatibility gaps had to be
+bridged in `app/src/shims/jquery.gsap.js` — a hand-written shim that replaces the
+discontinued GreenSock `jquery.gsap.js` plugin. It lives under `app/src/shims/`
+(version-controlled) rather than `app/src/vendor/` because the vendor directory
+is git-ignored and rewritten by `bower install`, which would clobber it:
 
 1. **`$.fn.animate` / `$.fn.delay` / `$.fn.stop`** — the project animates DOM via
    `$(el).animate({ y: '50%' }, { easing: 'easeOutQuart' })`, which the old
@@ -118,19 +121,25 @@ This touches essentially every file in `objects3D/` and `materials/` and cannot
 be verified without re-checking the visuals, so it is out of scope for a
 dependency bump.
 
-## Reproducibility caveat
+## Provisioning / reproducibility
 
-Because `app/src/vendor/` is git-ignored and bower is discontinued (its registry
-is frozen and will not resolve jQuery 4 / GSAP 3 / howler 2 / normalize 8), the
-updated vendor files only exist on this machine. To make the upgrade reproducible
-on a fresh clone, either commit `app/src/vendor/` (drop it from `.gitignore`) or
-migrate vendoring to npm. This is a pre-existing architectural issue, not
-introduced by this upgrade.
+A fresh clone is set up with `npm install` (toolchain) followed by
+`bower install` (front-end libs into the git-ignored `app/src/vendor/`). Bower
+still resolves the pinned versions, so the upgrade is reproducible today.
+
+The one custom file that is **not** bower-managed is the GSAP shim at
+`app/src/shims/jquery.gsap.js` — it is version-controlled precisely so that
+`bower install` (which rewrites `app/src/vendor/`) cannot clobber it.
+
+Bower itself is deprecated, so the eventual clean path is to migrate vendoring to
+npm (or commit `app/src/vendor/`). That is a pre-existing architectural decision,
+out of scope here.
 
 ## Verifying locally
 
 ```sh
 npm install
+bower install
 npx gulp build && npx gulp bundle   # build vendor+app, then concat into bundle.js
 npx gulp serve                      # http://localhost:8000
 ```
