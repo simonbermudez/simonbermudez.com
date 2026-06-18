@@ -310,23 +310,23 @@ function GravityGrid (options) {
 
   function setIdleTween (paused) {
     var properties = {
-      bezier: {
-        type: 'soft',
-        values: [
-          {
-            xA: random(rangeX.min, rangeX.max),
-            yA: random(rangeX.min, rangeX.max),
-            xB: random(rangeX.min, rangeX.max),
-            yB: random(rangeY.min, rangeY.max)
-          },
-          {
-            xA: random(rangeX.min, rangeX.max),
-            yA: random(rangeX.min, rangeX.max),
-            xB: random(rangeX.min, rangeX.max),
-            yB: random(rangeY.min, rangeY.max)
-          }
-        ]
-      },
+      // GSAP 3 dropped the bezier plugin; keyframes drive the satellites through
+      // the same two random waypoints with a soft (eased) path.
+      keyframes: [
+        {
+          xA: random(rangeX.min, rangeX.max),
+          yA: random(rangeX.min, rangeX.max),
+          xB: random(rangeX.min, rangeX.max),
+          yB: random(rangeY.min, rangeY.max)
+        },
+        {
+          xA: random(rangeX.min, rangeX.max),
+          yA: random(rangeX.min, rangeX.max),
+          xB: random(rangeX.min, rangeX.max),
+          yB: random(rangeY.min, rangeY.max)
+        }
+      ],
+      ease: 'sine.inOut',
       onUpdate: function () {
         satelliteA.position.x = this.target.xA;
         satelliteA.position.y = this.target.yA;

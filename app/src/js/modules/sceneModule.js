@@ -552,8 +552,11 @@ var SCENE = (function () {
         }
       });
 
+      // GSAP 3 dropped the bezier plugin; reproduce the speed pulse (0 -> 10 -> 0)
+      // that streaks the background lines during a section change with keyframes.
       TweenLite.to(cameraCache, 1.5, {
-        bezier: { type: 'soft', values: [{ speed: 10 }, { speed: 0 }] },
+        keyframes: [{ speed: 10 }, { speed: 0 }],
+        ease: 'sine.inOut',
         onUpdate: function () {
           backgroundLines.updateY(this.target.speed);
         }
@@ -744,14 +747,25 @@ var SCENE = (function () {
        * @method in
        */
       in: function () {
-        TweenLite.to({ fov: 200, speed: 0 }, 2, {
-          bezier: { type: 'soft', values: [{ speed: 20 }, { speed: 0 }]},
+        // fov zoom-in
+        var fovCache = { fov: 200 };
+        TweenLite.to(fovCache, 2, {
           fov: 60,
-          ease: 'easeOutCubic',
+          ease: 'power2.out',
           onUpdate: function () {
-            backgroundLines.updateZ(this.target.speed);
-            camera.fov = this.target.fov;
+            camera.fov = fovCache.fov;
             camera.updateProjectionMatrix();
+          }
+        });
+
+        // background-line speed pulse (was a bezier through 20 -> 0; GSAP 3
+        // dropped the bezier plugin, so use keyframes).
+        var speedCache = { speed: 0 };
+        TweenLite.to(speedCache, 2, {
+          keyframes: [{ speed: 20 }, { speed: 0 }],
+          ease: 'sine.inOut',
+          onUpdate: function () {
+            backgroundLines.updateZ(speedCache.speed);
           }
         });
       }
