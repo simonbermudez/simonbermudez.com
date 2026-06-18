@@ -1,6 +1,7 @@
 'use strict';
 
 var Section = require('../classes/SectionClass');
+var MobileUtils = require('../utils/mobileUtils');
 
 var TextPanel = require('../objects3D/TextPanelObject3D');
 var HeightMap = require('../objects3D/HeightMapObject3D');
@@ -22,16 +23,20 @@ heightMap.el.position.z = -10;
 heightMap.el.rotation.y = -0.6;
 heightSection.add(heightMap.el);
 
+// Mobile-responsive text settings
+var isMobile = MobileUtils.isMobile();
+var textOptions = {
+  align: 'center', // Always center on mobile
+  style: isMobile ? 'Bold' : '',
+  size: isMobile ? 30 : 50, // Smaller text on mobile
+  lineSpacing: isMobile ? 25 : 40 // Reduced line spacing on mobile
+};
+
 var text = new TextPanel(
   'L  E  T    I  T \n M  O  R  P  H',
-  {
-    align: 'right',
-    style: '',
-    size: 50,
-    lineSpacing: 40,
-  }
+  textOptions
 );
-text.el.position.set(-20, 0, 0);
+text.el.position.set(isMobile ? 0 : -20, 0, 0); // Center position on mobile
 heightSection.add(text.el);
 
 heightMap.el.visible = false;

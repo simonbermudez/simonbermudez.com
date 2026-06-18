@@ -1,0 +1,203 @@
+// Mobile-specific styles for 3D version
+
+// Prevent scrolling, bouncing, and selection on mobile
+body {
+  -webkit-overflow-scrolling: touch;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  &.mobile {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    
+    // Prevent bounce scrolling
+    -webkit-overflow-scrolling: auto;
+  }
+}
+
+// Ensure mobile viewport settings
+@media screen and (max-width: 768px) {
+  // Touch-friendly menu
+  .menu {
+    top: 20px;
+    left: 20px;
+    height: 50px;
+  }
+
+  .menu__button {
+    width: 30px;
+    height: 24px;
+    margin-top: -12px;
+  }
+
+  .menu__button__line {
+    height: 2px;
+  }
+
+  .menu__item {
+    line-height: 50px;
+    margin: 0 15px;
+    font-size: 14px;
+  }
+
+  // Help dialog adjustments
+  .help {
+    padding: 20px;
+  }
+
+  .help__content {
+    max-width: 90%;
+  }
+
+  .help__quit {
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+  }
+
+  // Map object adjustments
+  .map {
+    right: 5px; // Move closer to the right edge
+    bottom: 15px;
+    width: 120px;
+    height: 120px;
+  }
+
+  .map__sections__section {
+    width: 8px;
+    height: 8px;
+  }
+
+  // Trigger area adjustments for mobile
+  .trigger {
+    height: 100px; // Larger touch target
+  }
+
+  .trigger__info {
+    font-size: 12px;
+  }
+
+  // Text scaling for mobile
+  h1 {
+    font-size: 20px;
+    line-height: 30px;
+    letter-spacing: 5px;
+    margin: 30px 0;
+  }
+
+  h2 {
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin: 25px 0;
+  }
+
+  h3 {
+    font-size: 18px;
+    letter-spacing: 15px;
+  }
+
+  // Mouse/touch area adjustments
+  .mouse {
+    display: none; // Hide mouse indicators on mobile
+  }
+
+  // Loader adjustments
+  .loader__title {
+    font-size: 18px;
+    letter-spacing: 5px;
+  }
+
+  .loader__progress {
+    height: 3px;
+  }
+}
+
+// Extra small mobile devices
+@media screen and (max-width: 480px) {
+  .menu {
+    top: 15px;
+    left: 15px;
+  }
+
+  .map {
+    right: 3px; // Even closer to edge on small screens
+    bottom: 10px;
+    width: 100px;
+    height: 100px;
+  }
+
+  .help__content {
+    padding: 15px;
+    font-size: 12px;
+  }
+
+  .trigger {
+    height: 120px; // Even larger touch target for small screens
+  }
+
+  h1 {
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 3px;
+  }
+
+  h3 {
+    letter-spacing: 10px;
+  }
+}
+
+// Landscape mobile adjustments
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .trigger {
+    height: 80px;
+  }
+
+  .menu {
+    top: 10px;
+    left: 10px;
+    height: 40px;
+  }
+
+  .menu__button {
+    width: 25px;
+    height: 20px;
+    margin-top: -10px;
+  }
+
+  .menu__item {
+    line-height: 40px;
+    font-size: 12px;
+  }
+
+  .map {
+    right: 5px; // Close to edge in landscape
+    bottom: 10px;
+    width: 80px;
+    height: 80px;
+  }
+}
+
+// Touch-friendly interactive elements
+@media (pointer: coarse) {
+  .menu__button,
+  .help__quit,
+  .map,
+  .trigger {
+    // Increase touch target size
+    &::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      z-index: -1;
+    }
+  }
+}

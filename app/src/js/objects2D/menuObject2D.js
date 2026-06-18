@@ -1,6 +1,7 @@
 'use strict';
 
 var jQuery = require('jquery');
+var MobileUtils = require('../utils/mobileUtils');
 
 /**
  * Menu
@@ -17,8 +18,12 @@ function Menu () {
 
   var _callback = function () {};
   var timeouts = [];
+  var isMobile = MobileUtils.isMobile();
+  var isMenuOpen = false;
 
   function onMouseover () {
+    if (isMenuOpen) return;
+    
     $items.on('click', _callback);
 
     $itemsContainer.css('display', 'block');
@@ -36,10 +41,16 @@ function Menu () {
       timeouts.push(timeout);
     });
 
-    $el.one('mouseleave', onMouseout);
+    isMenuOpen = true;
+
+    if (!isMobile) {
+      $el.one('mouseleave', onMouseout);
+    }
   }
 
   function onMouseout () {
+    if (!isMenuOpen) return;
+    
     if (timeouts) {
       for (var i = 0, j = timeouts.length; i < j; i++) {
         window.clearTimeout(timeouts[i]);
@@ -54,10 +65,33 @@ function Menu () {
       $items.off('click', _callback);
     });
 
-    $button.one('mouseover click', onMouseover);
+    isMenuOpen = false;
+
+    if (!isMobile) {
+      $button.one('mouseover click', onMouseover);
+    }
   }
 
-  $button.one('mouseover click', onMouseover);
+  // Mobile-specific touch handling
+  if (isMobile) {
+    $button.on('click touchend', function(e) {
+      e.preventDefault();
+      if (isMenuOpen) {
+        onMouseout();
+      } else {
+        onMouseover();
+      }
+    });
+    
+    // Close menu when clicking outside on mobile
+    jQuery(document).on('click touchend', function(e) {
+      if (!$el.is(e.target) && $el.has(e.target).length === 0 && isMenuOpen) {
+        onMouseout();
+      }
+    });
+  } else {
+    $button.one('mouseover click', onMouseover);
+  }
 
   return {
     in: function () {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://simonbermudez.com/</loc>
+    <lastmod>2025-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://simonbermudez.com/app/public/img/preview.jpg</image:loc>
+      <image:title>Simon Bermudez WebGL Portfolio Preview</image:title>
+      <image:caption>Interactive WebGL portfolio showcasing creative web development and 3D visualizations</image:caption>
+    </image:image>
+  </url>
+</urlset>

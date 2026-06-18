@@ -1,6 +1,7 @@
 'use strict';
 
 var Section = require('../classes/SectionClass');
+var MobileUtils = require('../utils/mobileUtils');
 
 var TextPanel = require('../objects3D/TextPanelObject3D');
 var Face = require('../objects3D/FaceHpObject3D');
@@ -8,17 +9,21 @@ var Strips = require('../objects3D/StripsObject3D');
 
 var faceSection = new Section('face');
 
+// Mobile-responsive text settings
+var isMobile = MobileUtils.isMobile();
+var textOptions = {
+  align: 'center', // Always center on mobile
+  style: isMobile ? 'Bold' : '',
+  size: isMobile ? 30 : 50, // Smaller text on mobile
+  lineSpacing: isMobile ? 25 : 40 // Reduced line spacing on mobile
+};
+
 var text = new TextPanel(
   'K  E  E  P \n T  R  Y  I  N  G',
-  {
-    align: 'left',
-    style: '',
-    size: 50,
-    lineSpacing: 40
-  }
+  textOptions
 );
-text.el.position.set(23, 0, 0);
-text.el.rotation.y = -0.4;
+text.el.position.set(isMobile ? 0 : 23, 0, 0);
+text.el.rotation.y = isMobile ? 0 : -0.4; // No rotation on mobile for better readability
 faceSection.add(text.el);
 
 var face = new Face();

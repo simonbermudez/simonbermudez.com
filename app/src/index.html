@@ -1,10 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title> Simon Bermudez - Homepage </title>
-  <link rel="image_src" href="http://simonbermudez.com/favicon.ico" />
-  <meta name="description" content="" />
+  <title>Simon Bermudez - Creative Technologist Portfolio</title>
+  <meta name="description" content="Interactive 3D portfolio showcasing creative web development, 3D visualizations, and innovative digital experiences by Simon Bermudez. Explore cutting-edge web technologies and immersive storytelling.">
+  <meta name="keywords" content="Simon Bermudez, WebGL developer, creative technologist, 3D web development, interactive portfolio, web visualization, creative coding, digital artist">
+  <meta name="author" content="Simon Bermudez">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://simonbermudez.com/">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://simonbermudez.com/">
+  <meta property="og:title" content="Simon Bermudez - Creative Technologist">
+  <meta property="og:description" content="Interactive WebGL portfolio showcasing creative web development, 3D visualizations, and innovative digital experiences.">
+  <meta property="og:image" content="https://simonbermudez.com/app/public/img/preview.jpg">
+  <meta property="og:site_name" content="Simon Bermudez Portfolio">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://simonbermudez.com/">
+  <meta property="twitter:title" content="Simon Bermudez - Creative Technologist">
+  <meta property="twitter:description" content="Interactive WebGL portfolio showcasing creative web development, 3D visualizations, and innovative digital experiences.">
+  <meta property="twitter:image" content="https://simonbermudez.com/app/public/img/preview.jpg">
+  
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#2d89ef">
+  <link rel="image_src" href="https://simonbermudez.com/app/public/img/preview.jpg" />
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Simon Bermudez",
+    "jobTitle": "WebGL Developer & Creative Technologist",
+    "description": "Creative technologist specializing in WebGL development, 3D web visualizations, and interactive digital experiences",
+    "url": "https://simonbermudez.com",
+    "image": "https://simonbermudez.com/app/public/img/preview.jpg",
+    "sameAs": [
+      "https://github.com/simonbermudez",
+      "https://linkedin.com/in/simonbermudez"
+    ],
+    "knowsAbout": [
+      "WebGL",
+      "Three.js",
+      "Creative Coding",
+      "3D Web Development",
+      "Interactive Design",
+      "JavaScript",
+      "GLSL Shaders"
+    ],
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Freelance"
+    }
+  }
+  </script>
+  
+  <!-- Performance and SEO optimizations -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="dns-prefetch" href="//simonbermudez.com">
+  
+  <!-- Accessibility styles -->
+  <style>
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 6px;
+      background: #000;
+      color: #fff;
+      padding: 8px;
+      text-decoration: none;
+      z-index: 1000;
+    }
+    .skip-link:focus {
+      top: 6px;
+    }
+  </style>
+  
+  <!-- Favicon and Icons -->
   <link rel="apple-touch-icon" sizes="57x57" href="./app/public/favicons/apple-touch-icon-57x57.png">
   <link rel="apple-touch-icon" sizes="114x114" href="./app/public/favicons/apple-touch-icon-114x114.png">
   <link rel="apple-touch-icon" sizes="72x72" href="./app/public/favicons/apple-touch-icon-72x72.png">
@@ -21,12 +107,19 @@
   <link rel="icon" type="image/png" href="./app/public/favicons/favicon-32x32.png" sizes="32x32">
   <meta name="msapplication-TileColor" content="#2d89ef">
   <meta name="msapplication-TileImage" content="./app/public/favicons/mstile-144x144.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' 'unsafe-inline'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; frame-src 'none';">
 </head>
 <body>
-  <div class="loader">
+  <!-- Skip to main content for accessibility -->
+  <a href="#main-content" class="skip-link sr-only">Skip to main content</a>
+  
+  <div class="loader" role="status" aria-label="Loading portfolio content">
     <h3 class="text--center text--white loader__title is-active"> LOADING </h3>
-    <div class="loader__progress"></div>
+    <div class="loader__progress" aria-hidden="true"></div>
   </div>
 
   <script type="text/javascript">
@@ -74,7 +167,7 @@
       jsPayload.async = jsPayload.defer = false;
 
       var prefix;
-      if (webGL() && !mobile()) {
+      if (webGL()) {
         prefix = '3D';
       } else {
         prefix = '2D';
@@ -213,58 +306,57 @@
       </div>
 
       <div class="heads__sections">
-        <div class="heads__section heads__section--hello">
-          <div class="part part--title hello__title">
-            <h1 class="text--white text--noMargin"> HELLO </h1>
+        <section class="heads__section heads__section--hello" aria-labelledby="hello-heading">
+          <header class="part part--title hello__title">
+            <h1 id="hello-heading" class="text--white text--noMargin"> HELLO </h1>
             <h1 class="text--white text--noMargin"> <span class="placeholder--agency placeholder--agency--capital"></span> </h1>
-          </div>
+          </header>
           <div class="part part--smoke"
               data-0="transform:translate3d(0px, 0px, 0px)"
-              data-800="transform:translate3d(0px, -300px, 0px)"></div>
-        </div>
+              data-800="transform:translate3d(0px, -300px, 0px)" aria-hidden="true"></div>
+        </section>
 
-        <div class="heads__section heads__section--beams">
+        <section class="heads__section heads__section--beams" aria-label="Visual effects demonstration">
           <div class="part part--beam--left"
               data-100="transform:translate3d(0px, 120px, 0px); opacity:0"
               data-500="opacity:0.1"
-              data-1500="transform:translate3d(0px, 0px, 0px)"></div>
+              data-1500="transform:translate3d(0px, 0px, 0px)" aria-hidden="true"></div>
           <div class="part part--beam--center"
               data-0="transform:translate3d(0px, -10px, 0px); opacity:0"
               data-600="opacity:1"
-              data-1600="transform:translate3d(0px, 0px, 0px)"></div>
+              data-1600="transform:translate3d(0px, 0px, 0px)" aria-hidden="true"></div>
           <div class="part part--beam--right"
               data-100="transform:translate3d(0px, 50px, 0px); opacity:0"
               data-600="opacity:0.3"
-              data-1700="transform:translate3d(0px, -50px, 0px)"></div>
-        </div>
+              data-1700="transform:translate3d(0px, -50px, 0px)" aria-hidden="true"></div>
+        </section>
 
-        <div class="heads__section heads__section--drop">
-          <div class="part part--title drop__title"
+        <section class="heads__section heads__section--drop" aria-labelledby="idea-heading">
+          <header class="part part--title drop__title"
               data-1200="opacity:0"
               data-1500="opacity:1">
-            <h1 class="text--white text--right text--noMargin"> FROM </h1>
-            <h1 class="text--white text--right text--noMargin"> AN IDEA </h1>
-            </h1>
-          </div>
+            <h2 id="idea-heading" class="text--white text--right text--noMargin"> FROM </h2>
+            <h2 class="text--white text--right text--noMargin"> AN IDEA </h2>
+          </header>
           <div class="part part--drop"
               data-1000="transform:translate3d(0px, 350px, 0px); opacity:0"
-              data-1700="transform:translate3d(0px, 0px, 0px); opacity:1"></div>
-        </div>
+              data-1700="transform:translate3d(0px, 0px, 0px); opacity:1" aria-hidden="true"></div>
+        </section>
 
-        <div class="heads__section heads__section--ball">
-          <div class="part part--title ball__title"
+        <section class="heads__section heads__section--ball" aria-labelledby="shape-heading">
+          <header class="part part--title ball__title"
               data-1700="opacity:0"
               data-2000="opacity:1">
-            <h1 class="text--white text--noMargin text--left"> GIVE </h1>
-            <h1 class="text--white text--noMargin text--left"> SHAPE </h1>
-          </div>
+            <h2 id="shape-heading" class="text--white text--noMargin text--left"> GIVE </h2>
+            <h2 class="text--white text--noMargin text--left"> SHAPE </h2>
+          </header>
           <div class="part part--sphere"
               data-1400="transform:translate3d(0px, -300px, 0px) rotate(60deg); opacity:0"
-              data-2800="transform:translate3d(0px, 250px, 0px) rotate(0deg); opacity:1"></div>
+              data-2800="transform:translate3d(0px, 250px, 0px) rotate(0deg); opacity:1" aria-hidden="true"></div>
           <div class="part part--grid"
               data-1500="transform:translate3d(0px, 300px, 0px); opacity:0"
-              data-2600="transform:translate3d(0px, -200px, 0px); opacity:1"></div>
-        </div>
+              data-2600="transform:translate3d(0px, -200px, 0px); opacity:1" aria-hidden="true"></div>
+        </section>
 
         <div class="heads__section heads__section--flow">
           <div class="part part--field"
@@ -315,17 +407,17 @@
               data-6000="transform:translate3d(0px, 100px, 0px);"></div>
         </div>
 
-        <div class="heads__section heads__section--galaxy">
-          <div class="part part--title galaxy__title"
+        <section class="heads__section heads__section--galaxy" aria-labelledby="work-heading">
+          <header class="part part--title galaxy__title"
             data-5900="opacity:0"
             data-6500="opacity:1">
-              <h1 class="text--white text--noMargin"> WORK </h1>
-              <h1 class="text--white text--noMargin"> AS A TEAM </h1>
-          </div>
+              <h2 id="work-heading" class="text--white text--noMargin"> WORK </h2>
+              <h2 class="text--white text--noMargin"> AS A TEAM </h2>
+          </header>
           <div class="part part--galaxy"
             data-5800="transform:translate3d(0px, -100px, 0px); opacity:0"
-            data-6800="transform:translate3d(0px, 0px, 0px); opacity:1"></div>
-        </div>
+            data-6800="transform:translate3d(0px, 0px, 0px); opacity:1" aria-hidden="true"></div>
+        </section>
 
         <div class="heads__section heads__section--gravity">
           <div class="part part--gravity"
@@ -334,25 +426,34 @@
             ></div>
         </div>
 
-        <div class="heads__section heads__section--end">
-          <div class="part part--title end__title"
+        <section class="heads__section heads__section--end" aria-labelledby="thanks-heading">
+          <header class="part part--title end__title"
               data-7000="opacity:0"
               data-7400="opacity:1">
-            <h1 class="text--white text--noMargin"> THANKS FOR </h1>
-            <h1 class="text--white text--noMargin"> WATCHING </h1>
-          </div>
-        </div>
+            <h2 id="thanks-heading" class="text--white text--noMargin"> THANKS FOR </h2>
+            <h2 class="text--white text--noMargin"> WATCHING </h2>
+          </header>
+        </section>
 
         <div class="part part--stars"></div>
       </div>
     </div>
 
     <div class="tails" style="overflow-y:hidden;height: 100vh;">
-      <iframe style="border:black; width:100%; height:100vh" src="wp"></iframe>
+      <iframe style="border:black; width:100%; height:100vh" src="wp" title="About Simon Bermudez"></iframe>
     </div>
-
 
     <div class="trigger"></div>
   </div>
+
+  <noscript>
+    <div style="padding: 40px; text-align: center; background: #000; color: #fff; font-family: Arial, sans-serif;">
+      <h1>Simon Bermudez - WebGL Developer &amp; Creative Technologist</h1>
+      <p>This interactive WebGL portfolio requires JavaScript to display the full experience.</p>
+      <p>I'm a creative technologist specializing in WebGL development, 3D web visualizations, and innovative digital experiences.</p>
+      <p>Please enable JavaScript to explore my interactive portfolio, or contact me directly for more information.</p>
+      <p>Skills: WebGL, Three.js, Creative Coding, 3D Web Development, Interactive Design, JavaScript, GLSL Shaders</p>
+    </div>
+  </noscript>
 </body>
 </html>

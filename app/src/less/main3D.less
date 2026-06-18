@@ -10,6 +10,7 @@
 @import './layout/3D/global';
 @import './layout/3D/heads';
 @import './layout/3D/tails';
+@import './layout/3D/mobile';
 
 @import './objects2D/loader';
 @import './objects2D/map';
@@ -22,3 +23,8 @@
 @import './objects2D/wireframe';
 
 @import './objects2D/3D/menu';
+
+// Hide the navigation map for free scroll experience
+.map {
+  display: none !important;
+}

@@ -1,6 +1,7 @@
 'use strict';
 
 var Section = require('../classes/SectionClass');
+var MobileUtils = require('../utils/mobileUtils');
 
 var TextPanel = require('../objects3D/TextPanelObject3D');
 var Wave = require('../objects3D/WaveObject3D');
@@ -10,17 +11,21 @@ var waveSection = new Section('wave');
 var wave = new Wave();
 waveSection.add(wave.el);
 
+// Mobile-responsive text settings
+var isMobile = MobileUtils.isMobile();
+var textOptions = {
+  align: 'center', // Keep center alignment
+  style: isMobile ? 'Bold' : '',
+  size: isMobile ? 30 : 50, // Smaller text on mobile
+  lineSpacing: isMobile ? 25 : 40 // Reduced line spacing on mobile
+};
+
 var text = new TextPanel(
   'E  Y  E  S    O  N    T  H  E \n H  O  R  I  Z  O  N',
-  {
-    align: 'center',
-    style: '',
-    size: 50,
-    lineSpacing: 40
-  }
+  textOptions
 );
 text.el.position.y = 10;
-text.el.rotation.x = 0.2;
+text.el.rotation.x = isMobile ? 0 : 0.2; // No rotation on mobile for better readability
 waveSection.add(text.el);
 
 wave.el.visible = false;

@@ -17,6 +17,8 @@ var HASH = require('./modules/hashModule');
 
 var ImagesLoader = require('./classes/LoaderClass');
 
+var MobileUtils = require('./utils/mobileUtils');
+
 var Loader = require('./objects2D/LoaderObject2D');
 var Menu = require('./objects2D/menuObject2D');
 var Help = require('./objects2D/HelpObject2D');
@@ -40,6 +42,11 @@ var endSection = require('./sections/endSection');
 jQuery(function () {
   HASH.replacePlaceholders();
 
+  // Add mobile class to body if on mobile device
+  if (MobileUtils.isMobile()) {
+    jQuery('body').addClass('mobile');
+  }
+
   var loader = new Loader();
   var help = new Help();
   var menu = new Menu();
@@ -62,7 +69,6 @@ jQuery(function () {
 
     TweenLite.delayedCall(0.8, SCENE.in);
     TweenLite.delayedCall(1.5, function () {
-      map.in();
       menu.in();
     });
   });
@@ -385,21 +391,6 @@ jQuery(function () {
   SCENE.on('end', function () {
     SCENE.lock();
     APP.slide(SCENE.unlock);
-  });
-
-  // map
-  var map = SCENE.getMap();
-
-  $heads.prepend(map.$el);
-
-  map.init();
-
-  map.onClick(function (index) {
-    SCENE.goTo(index);
-  });
-
-  SCENE.on('section:changeBegin', function () {
-    map.setActive(this.to.index);
   });
 
   // tails
