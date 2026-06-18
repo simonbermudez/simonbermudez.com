@@ -1,21 +1,21 @@
 'use strict';
 
-var jQuery = require('jquery');
-var THREE = require('three');
-var TweenLite = require('tweenlite');
+import jQuery from 'jquery';
+import * as THREE from 'three';
+import { TweenLite } from 'gsap';
 
-var SPRITE3D = require('../libs/sprite3DLib');
+import SPRITE3D from '../libs/sprite3DLib.js';
 
-var SOUNDS = require('../modules/soundsModule');
+import SOUNDS from '../modules/soundsModule.js';
 
-var Events = require('../classes/EventsClass');
+import Events from '../classes/EventsClass.js';
 
-var MapObj = require('../objects2D/MapObject2D');
+import MapObj from '../objects2D/MapObject2D.js';
 
-var BackgroundParticles = require('../objects3D/BackgroundParticlesObject3D');
-var BackgroundLines = require('../objects3D/BackgroundLinesObject3D');
+import BackgroundParticles from '../objects3D/BackgroundParticlesObject3D.js';
+import BackgroundLines from '../objects3D/BackgroundLinesObject3D.js';
 
-var MobileUtils = require('../utils/mobileUtils');
+import MobileUtils from '../utils/mobileUtils.js';
 
 /**
  * 3D Scene
@@ -552,8 +552,11 @@ var SCENE = (function () {
         }
       });
 
+      // GSAP 3 dropped the bezier plugin; reproduce the speed pulse (0 -> 10 -> 0)
+      // that streaks the background lines during a section change with keyframes.
       TweenLite.to(cameraCache, 1.5, {
-        bezier: { type: 'soft', values: [{ speed: 10 }, { speed: 0 }] },
+        keyframes: [{ speed: 10 }, { speed: 0 }],
+        ease: 'sine.inOut',
         onUpdate: function () {
           backgroundLines.updateY(this.target.speed);
         }
@@ -744,14 +747,25 @@ var SCENE = (function () {
        * @method in
        */
       in: function () {
-        TweenLite.to({ fov: 200, speed: 0 }, 2, {
-          bezier: { type: 'soft', values: [{ speed: 20 }, { speed: 0 }]},
+        // fov zoom-in
+        var fovCache = { fov: 200 };
+        TweenLite.to(fovCache, 2, {
           fov: 60,
-          ease: 'easeOutCubic',
+          ease: 'power2.out',
           onUpdate: function () {
-            backgroundLines.updateZ(this.target.speed);
-            camera.fov = this.target.fov;
+            camera.fov = fovCache.fov;
             camera.updateProjectionMatrix();
+          }
+        });
+
+        // background-line speed pulse (was a bezier through 20 -> 0; GSAP 3
+        // dropped the bezier plugin, so use keyframes).
+        var speedCache = { speed: 0 };
+        TweenLite.to(speedCache, 2, {
+          keyframes: [{ speed: 20 }, { speed: 0 }],
+          ease: 'sine.inOut',
+          onUpdate: function () {
+            backgroundLines.updateZ(speedCache.speed);
           }
         });
       }
@@ -775,4 +789,4 @@ var SCENE = (function () {
   };
 })();
 
-module.exports = SCENE.getInstance();
+export default SCENE.getInstance();
