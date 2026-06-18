@@ -1,13 +1,12 @@
 'use strict';
 
-var fs = require('fs');
 var gulp = require('gulp');
-var gutil = require('gulp-util');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var notify = require('gulp-notify');
 
 var pkg = require('../utils/pkg');
+var noop = require('../utils/noop');
 var splitPath = require('../utils/splitPath');
 
 function vendor (dependencies, output, message) {
@@ -28,20 +27,17 @@ function vendor (dependencies, output, message) {
 
   return gulp.src(paths)
     .pipe(concat(outputDetails.file))
-    .pipe(pkg.debug || false ? gutil.noop() : uglify())
+    .pipe(pkg.debug ? noop() : uglify())
     .pipe(gulp.dest(outputDetails.path))
     .pipe(notify({ title: message, message: 'Success', sound: 'Morse' }));
 }
 
 gulp.task('vendor:3D', function () {
-  vendor(
+  return vendor(
     [
       'jquery',
       'three',
       'tweenlite',
-      'tweenlite.easing',
-      'tweenlite.bezier',
-      'tweenlite.css',
       'tweenlite.jquery',
       'howler',
       'visibly'
@@ -52,11 +48,10 @@ gulp.task('vendor:3D', function () {
 });
 
 gulp.task('vendor:2D', function () {
-  vendor(
+  return vendor(
     [
       'jquery',
       'tweenlite',
-      'tweenlite.css',
       'tweenlite.jquery',
       'skrollr'
     ],
@@ -65,4 +60,4 @@ gulp.task('vendor:2D', function () {
   );
 });
 
-gulp.task('vendor', ['vendor:2D', 'vendor:3D']);
+gulp.task('vendor', gulp.parallel('vendor:2D', 'vendor:3D'));

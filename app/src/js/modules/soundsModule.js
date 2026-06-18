@@ -17,6 +17,32 @@ var SOUNDS = (function () {
 
     var isMuted = false;
 
+    // Howler 2 dropped urls -> src and removed Howl.fadeIn/fadeOut in favour of
+    // a single fade(from, to, duration). Re-add the v1 helpers on the looping
+    // background track so the call sites in main3D.js stay unchanged.
+    var background = new Howl({
+      src: [
+        './app/public/sounds/background.mp3',
+        './app/public/sounds/background.ogg',
+        './app/public/sounds/background.wav'
+      ],
+      loop: true,
+      volume: 0.5
+    });
+
+    background.fadeIn = function (to, duration) {
+      if (!this.playing()) {
+        this.play();
+      }
+      this.fade(0, to, duration);
+      return this;
+    };
+
+    background.fadeOut = function (to, duration) {
+      this.fade(this.volume(), to, duration);
+      return this;
+    };
+
     return {
       /**
        * Toggle on/off sounds
@@ -24,11 +50,8 @@ var SOUNDS = (function () {
        * @method toogle
        */
       toggle: function () {
-        if (isMuted) {
-          Howler.unmute();
-        } else {
-          Howler.mute();
-        }
+        // Howler 2 replaced mute()/unmute() with mute(boolean)
+        Howler.mute(!isMuted);
 
         isMuted = !isMuted;
       },
@@ -42,24 +65,16 @@ var SOUNDS = (function () {
         return Howler._muted;
       },
 
-      background: new Howl({
-        urls: [
-          './app/public/sounds/background.mp3',
-          './app/public/sounds/background.ogg',
-          './app/public/sounds/background.wav'
-        ],
-        loop: true,
-        volume: 0.5
-      }),
+      background: background,
       wind: new Howl({
-        urls: [
+        src: [
           './app/public/sounds/wind.mp3',
           './app/public/sounds/wind.ogg',
           './app/public/sounds/wind.wav'
         ]
       }),
       whitenoise: new Howl({
-        urls: [
+        src: [
           './app/public/sounds/whitenoise.mp3',
           './app/public/sounds/whitenoise.ogg',
           './app/public/sounds/whitenoise.wav'
@@ -67,7 +82,7 @@ var SOUNDS = (function () {
         volume: 0.05
       }),
       neon: new Howl({
-        urls: [
+        src: [
           './app/public/sounds/neon.mp3',
           './app/public/sounds/neon.ogg',
           './app/public/sounds/neon.wav'
@@ -96,11 +111,11 @@ var SOUNDS = (function () {
 
 // tab active/inactive
 visibly.onHidden(function () {
-  Howler.mute();
+  Howler.mute(true);
 });
 
 visibly.onVisible(function () {
-  Howler.unmute();
+  Howler.mute(false);
 });
 
 module.exports = SOUNDS.getInstance();
