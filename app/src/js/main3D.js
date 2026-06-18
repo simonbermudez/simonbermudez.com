@@ -6,7 +6,10 @@ require('./polyfills/indexOfPolyfill');
 
 var jQuery = require('jquery');
 var TweenLite = require('tweenlite');
-TweenLite.defaultEase = window.Quad.easeInOut;
+// GSAP 3 sets tween defaults via gsap.defaults() instead of TweenLite.defaultEase.
+if (window.gsap) {
+  window.gsap.defaults({ ease: 'quad.inOut' });
+}
 
 require('./libs/waypointLib');
   
@@ -127,7 +130,10 @@ jQuery(function () {
   SCENE.on('section:changeBegin', function () {
     var way = this.way;
     var to = this.to.name;
-    var from = this.from.name;
+    // The very first changeBegin (fired by SCENE.start) has from === to, so the
+    // "out begin" branch below would reverse the section we're entering and leave
+    // it hidden. Treat from as empty when it matches to, so only the in runs.
+    var from = this.from.name === this.to.name ? null : this.from.name;
 
     // in begin
     if (to === 'hello') {

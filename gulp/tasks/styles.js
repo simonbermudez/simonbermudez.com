@@ -1,13 +1,14 @@
 'use strict';
 
 var gulp = require('gulp');
-var gutil = require('gulp-util');
+var log = require('fancy-log');
 var less = require('gulp-less');
-var minify = require('gulp-minify-css');
+var minify = require('gulp-clean-css');
 var rename = require('gulp-rename');
 var notify = require('gulp-notify');
 
 var pkg = require('../utils/pkg');
+var noop = require('../utils/noop');
 var splitPath = require('../utils/splitPath');
 
 function styles (input, output, message) {
@@ -15,29 +16,29 @@ function styles (input, output, message) {
 
   var outputDetails = splitPath(output);
 
-  function process () {
-    gulp.src(input)
-      .pipe(less().on('error', function (error) {
-        gutil.log('Less error', error);
-        gutil.beep();
+  function build () {
+    return gulp.src(input)
+      .pipe(less({ javascriptEnabled: true }).on('error', function (error) {
+        log.error('Less error', error);
+        process.stdout.write('\x07');
         notify({ title: message, message: 'Error', sound: 'Basso' });
         this.end();
       }))
-      .pipe(pkg.debug || false ? gutil.noop() : minify())
+      .pipe(pkg.debug ? noop() : minify())
       .pipe(rename(outputDetails.file))
       .pipe(gulp.dest(outputDetails.path))
       .pipe(notify({ title: message, message: 'Success', sound: 'Morse' }));
   }
 
-  process();
-
-  if(pkg.watch) {
-    gulp.watch('./app/src/less/**/*.less', process);
+  if (pkg.watch) {
+    gulp.watch('./app/src/less/**/*.less', build);
   }
+
+  return build();
 }
 
 gulp.task('styles:3D', function () {
-  styles(
+  return styles(
     './app/src/less/main3D.less',
     './app/dist/css/3D/main.css',
     'Styles 3D'
@@ -45,11 +46,11 @@ gulp.task('styles:3D', function () {
 });
 
 gulp.task('styles:2D', function () {
-  styles(
+  return styles(
     './app/src/less/main2D.less',
     './app/dist/css/2D/main.css',
     'Styles 2D'
   );
 });
 
-gulp.task('styles', ['styles:2D', 'styles:3D']);
+gulp.task('styles', gulp.parallel('styles:2D', 'styles:3D'));
