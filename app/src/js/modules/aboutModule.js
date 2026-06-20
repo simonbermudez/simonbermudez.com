@@ -305,12 +305,11 @@ var ABOUT = (function () {
       logo = new THREE.Group();
       scene.add(logo);
 
-      // Glowing bloom behind the monogram so it reads against the nebula even
-      // before / if the OBJ fails to load. Two stacked additive sprites give a
-      // soft, hot-centred halo.
+      // Soft white glow behind the monogram so it reads against the nebula
+      // before / if the OBJ fails to load.
       var halo = new THREE.Group();
       halo.userData.isHalo = true;
-      [[17, '#9bb4ff', 0.4], [10, '#dfe8ff', 0.5]].forEach(function (h) {
+      [[17, '#ffffff', 0.15], [10, '#ffffff', 0.2]].forEach(function (h) {
         halo.add(new THREE.Mesh(
           new THREE.CircleGeometry(h[0], 48),
           new THREE.MeshBasicMaterial({
@@ -325,27 +324,21 @@ var ABOUT = (function () {
       });
       logo.add(halo);
 
-      // Polished blue metal that glows: fully metallic, so the environment map
-      // (see buildEnvironment) and lights give it bright reflections, plus a
-      // blue emissive so it glows from within. Opaque (no transmission) — that
-      // removes the self-intersection artefacts the glass version showed where
-      // the monogram's own faces overlapped.
+      // Matte black body — matches the dark wireframe-shard aesthetic of the
+      // backdrop. The EdgesGeometry outline below provides the "white edges."
       var material = new THREE.MeshStandardMaterial({
-        color: '#5b8cff',
-        metalness: 1,
-        roughness: 0.22,
-        emissive: '#3a5cff',
-        emissiveIntensity: 0.8,
-        envMapIntensity: 1.6
+        color: '#000000',
+        metalness: 0,
+        roughness: 1,
+        emissive: '#000000',
+        emissiveIntensity: 0
       });
 
-      // Glowing outline: only the sharp silhouette / extrusion edges survive the
-      // 32° threshold, so it traces the logo rather than fogging it with a full
-      // wireframe.
+      // Bright white edge outline — same approach as the backdrop shards.
       var edgeMaterial = new THREE.LineBasicMaterial({
-        color: '#bcd6ff',
+        color: '#ffffff',
         transparent: true,
-        opacity: 0.65,
+        opacity: 0.85,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       });
