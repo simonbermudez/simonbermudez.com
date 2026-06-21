@@ -47,10 +47,11 @@ function HelloVideo (options) {
   this._revealed = false;
   this._rafId = null;
 
-  // Interaction radius / strength, in plane-local units.
-  this.radius = this.baseWidth * 0.17;
-  this.pushXY = this.baseWidth * 0.14;
-  this.pushZ = 8;
+  // Interaction radius / strength, in plane-local units. Kept gentle so the
+  // hover reads as a soft ripple rather than blowing a hole in the image.
+  this.radius = this.baseWidth * 0.12;
+  this.pushXY = this.baseWidth * 0.05;
+  this.pushZ = 3.5;
   this.popZ = 3.2;          // video-brightness relief depth
 
   this.dpr = Math.min(window.devicePixelRatio || 1, 2);
