@@ -19,6 +19,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      // Multi-page build: the landing experience (index.html) and the
+      // scroll-driven 3D storytelling resume (story.html).
+      input: {
+        main: 'index.html',
+        story: 'story/index.html',
+      },
+    },
   },
   plugins: [
     viteStaticCopy({
@@ -27,11 +35,18 @@ export default defineConfig({
         // hardcoded ./app/public/... runtime asset paths).
         { src: 'app/public', dest: '.' },
         { src: ['favicon.ico', 'robots.txt', 'sitemap.xml', '404.html'], dest: '.' },
+        // The /calendar booking page is self-contained static HTML (CDN
+        // scripts, inline CSS, absolute asset URLs) plus its og:image, so it
+        // ships verbatim rather than through Vite's bundler -> dist/calendar/.
+        { src: 'calendar', dest: '.' },
       ],
     }),
   ],
   server: {
     port: 8000,
     host: true,
+    // Allow access through Cloudflare quick tunnels (*.trycloudflare.com) so the
+    // dev server can be shared via a public link for live preview.
+    allowedHosts: ['.trycloudflare.com'],
   },
 });
