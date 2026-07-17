@@ -35,6 +35,10 @@ export default defineConfig({
         // hardcoded ./app/public/... runtime asset paths).
         { src: 'app/public', dest: '.' },
         { src: ['favicon.ico', 'robots.txt', 'sitemap.xml', '404.html'], dest: '.' },
+        // The /calendar booking page is self-contained static HTML (CDN
+        // scripts, inline CSS, absolute asset URLs) plus its og:image, so it
+        // ships verbatim rather than through Vite's bundler -> dist/calendar/.
+        { src: 'calendar', dest: '.' },
       ],
     }),
   ],
