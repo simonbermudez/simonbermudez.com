@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
@@ -20,10 +21,12 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      // Multi-page build: the landing experience (index.html) and the
-      // scroll-driven 3D storytelling resume (story.html).
+      // Multi-page build. Each entry is an HTML file whose path under the repo
+      // root becomes its path on the deployed site, so
+      // `birthday-wrapped-2026/index.html` is served at /birthday-wrapped-2026.
       input: {
-        main: 'index.html',
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        birthday: fileURLToPath(new URL('./birthday-wrapped-2026/index.html', import.meta.url)),
         story: 'story/index.html',
       },
     },
