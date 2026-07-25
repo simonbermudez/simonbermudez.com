@@ -43,6 +43,7 @@ function Neon (options) {
   this.currentFlicker = 0;
   this.totalFlicker = random(3, 6, true);
   this.flickering = false;
+  this.active = false;
 
   // animations
   var _this = this;
@@ -102,6 +103,7 @@ Neon.defaultOptions = {
  * Start animations sequence
  */
 Neon.prototype.start = function () {
+  this.active = true;
   for (var i = 0, j = this.animations.length; i < j; i++) {
     this.animations[i].resume();
   }
@@ -111,6 +113,7 @@ Neon.prototype.start = function () {
  * Stop animations sequence
  */
 Neon.prototype.stop = function () {
+  this.active = false;
   for (var i = 0, j = this.animations.length; i < j; i++) {
     this.animations[i].pause();
   }
@@ -130,7 +133,7 @@ Neon.prototype.flickOn = function () {
     this.projection.material.opacity = 0.05;
   }
 
-  SOUNDS.neon.play();
+  if (this.active) { SOUNDS.neon.play(); }
 
   var _this = this;
 
@@ -164,7 +167,7 @@ Neon.prototype.flickOff = function () {
   TweenLite.delayedCall(random(0.05, 0.1), function () {
     _this.flickering = !_this.flickering;
 
-    SOUNDS.neon.play();
+    if (_this.active) { SOUNDS.neon.play(); }
   });
 };
 
