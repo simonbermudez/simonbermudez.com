@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Birthday Wrapped · Simon</title>
+<style>
+/* ─────────────────────────  BASE  ───────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0b0b12;
+  --font:"SF Pro Display","Helvetica Neue",Helvetica,Inter,system-ui,-apple-system,Arial,sans-serif;
+  --pad:clamp(20px,5.5vw,64px);
+}
+html,body{height:100%;background:#000;overscroll-behavior:none}
+body{
+  font-family:var(--font);color:#fff;
+  -webkit-font-smoothing:antialiased;
+  display:grid;place-items:center;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ─────────────────────────  SHELL  ───────────────────────── */
+#app{
+  position:relative;width:100vw;height:100dvh;
+  max-width:min(100vw,calc(100dvh * 0.62));
+  overflow:hidden;background:#05050a;
+  box-shadow:0 40px 120px rgba(0,0,0,.8);
+  isolation:isolate;
+}
+@media (min-width:900px){ #app{border-radius:18px} }
+
+/* story progress bars */
+#bars{
+  position:absolute;inset:calc(env(safe-area-inset-top) + 12px) 14px auto 14px;
+  z-index:40;display:flex;gap:4px;pointer-events:none;
+}
+#bars i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden;mix-blend-mode:difference}
+#bars i::after{content:"";display:block;height:100%;width:0;background:#fff;border-radius:3px}
+#bars i.done::after{width:100%}
+#bars i.live::after{width:100%;transition:width var(--dur,7000ms) linear}
+#bars i.live.paused::after{transition:none}
+
+/* language toggle */
+#lang{
+  position:absolute;top:calc(env(safe-area-inset-top) + 24px);right:14px;z-index:45;
+  display:flex;gap:2px;padding:3px;border-radius:99px;
+  background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+#lang button{
+  font-size:10px;font-weight:800;letter-spacing:.09em;padding:4px 9px;
+  border-radius:99px;color:#fff;opacity:.55;
+}
+#lang button.on{background:#fff;color:#0b0b12;opacity:1}
+
+/* tap zones */
+.zone{position:absolute;top:0;bottom:0;width:32%;z-index:30;-webkit-tap-highlight-color:transparent}
+.zone.prev{left:0}
+.zone.next{right:0;width:68%}
+
+/* hud */
+#hud{
+  position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);
+  z-index:35;display:flex;justify-content:center;gap:10px;pointer-events:none;
+}
+#hud span{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  opacity:.5;mix-blend-mode:difference;
+}
+
+/* ─────────────────────────  SLIDES  ───────────────────────── */
+.slide{
+  position:absolute;inset:0;padding:calc(env(safe-area-inset-top) + 54px) var(--pad) calc(env(safe-area-inset-bottom) + 54px);
+  display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,2.2vh,22px);
+  opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s;
+  background:var(--bg);color:var(--fg);overflow:hidden;
+}
+.slide.on{opacity:1;visibility:visible}
+
+/* animated colour blobs */
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;z-index:0}
+.slide.on .blob{animation:float 14s ease-in-out infinite alternate}
+@keyframes float{ to{ transform:translate3d(var(--tx,40px),var(--ty,-50px),0) scale(1.25) } }
+
+/* film grain */
+#grain{
+  position:absolute;inset:-50%;z-index:25;pointer-events:none;opacity:.16;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+  animation:grain 1s steps(4) infinite;mix-blend-mode:overlay;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)} 25%{transform:translate(-4%,3%)}
+  50%{transform:translate(3%,-4%)} 75%{transform:translate(-3%,-2%)} 100%{transform:translate(2%,4%)}
+}
+
+.slide > *:not(.blob):not(canvas){position:relative;z-index:2}
+
+/* ── typography ── */
+.kicker{
+  font-size:clamp(10px,2.7vw,13px);font-weight:800;letter-spacing:.24em;
+  text-transform:uppercase;opacity:.72;
+}
+.head{
+  font-size:clamp(30px,8.4vw,58px);line-height:.94;font-weight:800;letter-spacing:-.035em;
+  text-wrap:balance;
+}
+.mega{
+  font-size:clamp(78px,25vw,190px);line-height:.8;font-weight:900;letter-spacing:-.06em;
+  font-variant-numeric:tabular-nums;
+}
+.sub{font-size:clamp(14px,3.7vw,19px);line-height:1.34;font-weight:600;opacity:.86;text-wrap:pretty}
+.tiny{font-size:clamp(11px,2.9vw,13px);line-height:1.45;font-weight:600;opacity:.6}
+.hl{color:var(--acc)}
+em{font-style:normal;background:var(--acc);color:var(--bg);padding:0 .18em;border-radius:.12em}
+
+/* ── reveal animation ── */
+.rv{opacity:0;transform:translateY(26px)}
+.slide.on .rv{opacity:1;transform:none;transition:opacity .62s cubic-bezier(.2,.7,.3,1) var(--d,0s),transform .62s cubic-bezier(.2,.7,.3,1) var(--d,0s)}
+.pop{opacity:0;transform:scale(.72)}
+.slide.on .pop{opacity:1;transform:none;transition:opacity .5s ease var(--d,0s),transform .68s cubic-bezier(.2,1.5,.4,1) var(--d,0s)}
+
+/* ── bar chart ── */
+.bar{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;margin-bottom:clamp(8px,1.6vh,14px)}
+.bar b{font-size:clamp(13px,3.5vw,17px);font-weight:800;letter-spacing:-.01em}
+.bar u{text-decoration:none;font-size:clamp(13px,3.4vw,17px);font-weight:800;font-variant-numeric:tabular-nums;opacity:.85}
+.bar .track{grid-column:1/-1;height:clamp(9px,1.6vh,13px);border-radius:99px;background:color-mix(in srgb,var(--fg) 15%,transparent);overflow:hidden}
+.bar .fill{height:100%;width:0;border-radius:99px;background:var(--acc);
+  transition:width 1.1s cubic-bezier(.2,.8,.25,1) var(--d,.15s)}
+.slide.on .bar .fill{width:var(--w)}
+
+/* ── top-5 chart list ── */
+.rank{display:flex;align-items:center;gap:clamp(10px,3vw,18px);padding:clamp(7px,1.5vh,12px) 0;border-bottom:1.5px solid color-mix(in srgb,var(--fg) 16%,transparent)}
+.rank .no{font-size:clamp(22px,6.5vw,40px);font-weight:900;letter-spacing:-.05em;width:1.7ch;opacity:.32;font-variant-numeric:tabular-nums}
+.rank .txt{flex:1;min-width:0}
+.rank .txt b{display:block;font-size:clamp(16px,4.6vw,25px);font-weight:800;letter-spacing:-.025em;line-height:1.1}
+.rank .txt s{display:block;text-decoration:none;font-size:clamp(10px,2.8vw,12px);font-weight:700;opacity:.55;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.rank .val{font-size:clamp(20px,5.6vw,32px);font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--acc)}
+.rank.first .no{opacity:1;color:var(--acc)}
+.rank .no.emoji{opacity:1;font-size:clamp(19px,5vw,28px);width:1.5em;letter-spacing:0}
+
+/* ── stat grid ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.8vh,14px)}
+.cell{
+  border-radius:16px;padding:clamp(11px,2.4vh,18px);
+  background:color-mix(in srgb,var(--fg) 9%,transparent);
+  border:1.5px solid color-mix(in srgb,var(--fg) 15%,transparent);
+}
+.cell strong{display:block;font-size:clamp(26px,7.4vw,42px);font-weight:900;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;color:var(--acc)}
+.cell span{display:block;margin-top:5px;font-size:clamp(10px,2.7vw,12px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.66;line-height:1.3}
+.cell.wide{grid-column:1/-1}
+
+/* ── globe ── */
+#globeWrap{position:absolute;inset:0;z-index:1}
+#globe{width:100%;height:100%;display:block}
+
+/* ── chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-size:clamp(10px,2.7vw,12.5px);font-weight:800;letter-spacing:-.005em;
+  padding:6px 11px;border-radius:99px;
+  border:1.5px solid color-mix(in srgb,var(--fg) 30%,transparent);
+}
+.chip.hot{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+
+/* ── donut ── */
+.donut{display:flex;align-items:center;gap:clamp(14px,4vw,30px)}
+.donut svg{width:clamp(120px,38vw,190px);height:auto;flex:none;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:9;stroke-linecap:butt;
+  stroke-dasharray:var(--dash);stroke-dashoffset:100;
+  transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.25,1) var(--d,.2s)}
+.slide.on .donut circle{stroke-dashoffset:var(--off)}
+.legend li{list-style:none;display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:clamp(12px,3.2vw,15px);font-weight:700}
+.legend i{width:11px;height:11px;border-radius:3px;flex:none}
+.legend s{text-decoration:none;margin-left:auto;opacity:.55;font-variant-numeric:tabular-nums}
+
+/* ── marquee ── */
+.marq{position:relative;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.marq div{display:flex;gap:14px;width:max-content;animation:slide 44s linear infinite}
+.marq.rev div{animation-direction:reverse;animation-duration:52s}
+.marq span{font-size:clamp(11px,2.9vw,13px);font-weight:700;opacity:.62;white-space:nowrap}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* ── cover ── */
+.cover-art{
+  position:absolute;inset:0;z-index:1;display:grid;place-items:center;
+}
+.ring{position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.14)}
+.slide.on .ring{animation:pulse 4.5s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.35);opacity:0}25%{opacity:.9}100%{transform:scale(1.5);opacity:0}}
+
+.replay{
+  align-self:flex-start;margin-top:6px;padding:12px 22px;border-radius:99px;
+  background:var(--acc);color:var(--bg);font-weight:800;font-size:14px;letter-spacing:-.01em;
+}
+.replay:active{transform:scale(.96)}
+
+/* start button */
+#start{
+  position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 60px);transform:translateX(-50%);
+  z-index:36;padding:14px 30px;border-radius:99px;background:#fff;color:#0b0b12;
+  font-weight:800;font-size:15px;letter-spacing:-.01em;white-space:nowrap;
+  box-shadow:0 10px 40px rgba(0,0,0,.4);animation:bob 2.4s ease-in-out infinite;
+}
+@keyframes bob{50%{transform:translate(-50%,-7px)}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.2s !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bars"></div>
+  <div id="grain"></div>
+
+  <!-- ══════════ 01 · COVER ══════════ -->
+  <section class="slide" style="--bg:#0a0618;--fg:#fff;--acc:#d8ff3e">
+    <div class="blob" style="width:70%;aspect-ratio:1;background:#ff2fa0;top:-12%;left:-20%;--tx:60px;--ty:40px"></div>
+    <div class="blob" style="width:66%;aspect-ratio:1;background:#7b2cff;bottom:-16%;right:-22%;--tx:-50px;--ty:-40px"></div>
+    <div class="blob" style="width:44%;aspect-ratio:1;background:#d8ff3e;top:36%;right:-8%;opacity:.35;--tx:-30px;--ty:60px"></div>
+    <div class="cover-art">
+      <div class="ring" style="width:74%;aspect-ratio:1"></div>
+      <div class="ring" style="width:74%;aspect-ratio:1;animation-delay:1.5s"></div>
+      <div class="ring" style="width:74%;aspect-ratio:1;animation-delay:3s"></div>
+    </div>
+    <div style="margin-top:auto"></div>
+    <p class="kicker rv" style="--d:.1s">A birthday special edition</p>
+    <h1 class="head rv" style="--d:.2s;font-size:clamp(42px,13vw,84px);letter-spacing:-.055em">
+      Simon's<br><span class="hl">Wrapped</span>
+    </h1>
+    <p class="sub rv" style="--d:.34s;max-width:24ch">
+      122 people. Every one of them a reason today is worth celebrating.
+    </p>
+    <div style="margin-top:auto"></div>
+    <p class="tiny rv" style="--d:.5s;margin-bottom:clamp(52px,9vh,74px)">Tap right to advance · left to go back</p>
+  </section>
+
+  <!-- ══════════ 02 · 122 ══════════ -->
+  <section class="slide" style="--bg:#ff2fa0;--fg:#14001f;--acc:#d8ff3e">
+    <div class="blob" style="width:80%;aspect-ratio:1;background:#ff8ac9;top:-20%;right:-25%;opacity:.7"></div>
+    <div style="margin-top:auto"></div>
+    <p class="kicker rv">This year you counted</p>
+    <div class="mega pop" data-count="122" style="--d:.15s">0</div>
+    <h2 class="head rv" style="--d:.4s;font-size:clamp(24px,7vw,42px)">people who made<br>the list.</h2>
+    <p class="sub rv" style="--d:.55s;max-width:26ch">
+      Not followers. Not contacts. People you can place — where you met, how you met, and where they are now.
+    </p>
+    <div style="margin-top:auto"></div>
+    <p class="tiny rv" style="--d:.7s">That's a village, not a network.</p>
+  </section>
+
+  <!-- ══════════ 03 · GLOBE ══════════ -->
+  <section class="slide" id="s-globe" style="--bg:#03060f;--fg:#fff;--acc:#4de3ff">
+    <div id="globeWrap"><canvas id="globe"></canvas></div>
+    <p class="kicker rv">Your people are currently in</p>
+    <h2 class="head rv" style="--d:.12s">
+      <span class="hl" data-count="24">0</span> cities.<br>
+      <span class="hl" data-count="11">0</span> countries.<br>
+      <span class="hl" data-count="3">0</span> continents.
+    </h2>
+    <div style="margin-top:auto"></div>
+    <p class="sub rv" style="--d:.3s;max-width:25ch">
+      Every line runs back to Toronto. Every dot is somebody who'd pick up.
+    </p>
+    <p class="tiny rv" style="--d:.45s">North America 62 · South America 49 · Europe 11</p>
+  </section>
+
+  <!-- ══════════ 04 · PASSPORTS ══════════ -->
+  <section class="slide" style="--bg:#ffd166;--fg:#241300;--acc:#e5383b">
+    <div class="blob" style="width:70%;aspect-ratio:1;background:#ff9f1c;bottom:-20%;left:-20%;opacity:.6"></div>
+    <p class="kicker rv">Passports in the room</p>
+    <h2 class="head rv" style="--d:.1s"><span class="hl" data-count="17">0</span> nationalities</h2>
+    <div style="margin-top:clamp(10px,2vh,20px)">
+      <div class="bar" style="--w:100%;--d:.3s"><b>Venezuelan</b><u>72</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:41.7%;--d:.42s"><b>Canadian</b><u>30</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:5.6%;--d:.54s"><b>Portuguese · Brazilian · Argentinian</b><u>4</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:4.2%;--d:.62s"><b>Colombian</b><u>3</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:2.8%;--d:.7s"><b>Peruvian · Spanish · Ukrainian · Mexican · Panamanian</b><u>2</u><div class="track"><div class="fill"></div></div></div>
+    </div>
+    <p class="sub rv" style="--d:.85s;max-width:28ch">
+      And six people are the only one of their kind here — <em>German</em> <em>Chinese</em> <em>American</em> <em>Paraguayan</em> <em>Italian</em> <em>English</em>.
+    </p>
+    <p class="tiny rv" style="--d:.95s">10 of them carry more than one passport. David Vivas carries three.</p>
+  </section>
+
+  <!-- ══════════ 05 · CITIES ══════════ -->
+  <section class="slide" style="--bg:#04d6a0;--fg:#02241b;--acc:#04241c">
+    <div class="blob" style="width:75%;aspect-ratio:1;background:#7bffd4;top:-18%;right:-24%;opacity:.55"></div>
+    <p class="kicker rv">Home base rankings</p>
+    <h2 class="head rv" style="--d:.1s">Three cities hold<br><span data-count="71">0</span>% of everyone.</h2>
+    <div style="margin-top:clamp(10px,2vh,18px)">
+      <div class="bar" style="--w:100%;--d:.3s"><b>🇨🇦 Toronto</b><u>46</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:56.5%;--d:.42s"><b>🇻🇪 Caracas</b><u>26</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:32.6%;--d:.54s"><b>🇦🇷 Buenos Aires</b><u>15</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:8.7%;--d:.64s"><b>Montreal · Madrid · Louisville</b><u>4</u><div class="track"><div class="fill"></div></div></div>
+      <div class="bar" style="--w:6.5%;--d:.72s"><b>Genova</b><u>3</u><div class="track"><div class="fill"></div></div></div>
+    </div>
+    <p class="tiny rv" style="--d:.88s">The other 21 cities hold one or two people each — the long tail of a life that moved.</p>
+  </section>
+
+  <!-- ══════════ 06 · DIASPORA ══════════ -->
+  <section class="slide" style="--bg:#141433;--fg:#fff;--acc:#ff8f3f">
+    <div class="blob" style="width:78%;aspect-ratio:1;background:#ff8f3f;top:-24%;left:-26%;opacity:.4"></div>
+    <div class="blob" style="width:60%;aspect-ratio:1;background:#4361ee;bottom:-18%;right:-20%;opacity:.5"></div>
+    <p class="kicker rv">The scatter plot of your life</p>
+    <h2 class="head rv" style="--d:.1s">You met <span class="hl">47</span> people in Caracas.<br><span class="hl" data-count="21">0</span> of them have left.</h2>
+    <p class="sub rv" style="--d:.3s;max-width:29ch">
+      They landed in twelve different cities. Buenos Aires took six. Madrid took three. Genova and Chicago took two each.
+    </p>
+    <div class="chips rv" style="--d:.45s;margin-top:4px">
+      <span class="chip hot">Buenos Aires 6</span><span class="chip hot">Madrid 3</span>
+      <span class="chip">Genova 2</span><span class="chip">Chicago 2</span><span class="chip">Santander</span>
+      <span class="chip">Madeira</span><span class="chip">Turks &amp; Caicos</span><span class="chip">Orlando</span>
+      <span class="chip">Canary Islands</span><span class="chip">Santiago</span><span class="chip">Valencia</span><span class="chip">Toronto</span>
+    </div>
+    <div class="grid rv" style="--d:.62s;margin-top:clamp(8px,1.6vh,14px)">
+      <div class="cell"><strong data-count="43">0</strong><span>Venezuelans now living abroad</span></div>
+      <div class="cell"><strong data-count="10">0</strong><span>countries they landed in</span></div>
+    </div>
+    <p class="tiny rv" style="--d:.78s">A generation left. You kept every single number.</p>
+  </section>
+
+  <!-- ══════════ 07 · TOP 5 HOW ══════════ -->
+  <section class="slide" style="--bg:#d8ff3e;--fg:#101006;--acc:#ff2fa0">
+    <div class="blob" style="width:66%;aspect-ratio:1;background:#a8ff00;bottom:-22%;right:-22%;opacity:.65"></div>
+    <p class="kicker rv">Your top channels of</p>
+    <h2 class="head rv" style="--d:.08s">How we met</h2>
+    <div style="margin-top:clamp(6px,1.4vh,14px)">
+      <div class="rank first rv" style="--d:.22s"><span class="no">1</span><span class="txt"><b>Through Friends</b><s>the compounding interest of being liked</s></span><span class="val" data-count="34">0</span></div>
+      <div class="rank rv" style="--d:.34s"><span class="no">2</span><span class="txt"><b>Grindr</b><s>started as a swipe, stayed as a person</s></span><span class="val" data-count="21">0</span></div>
+      <div class="rank rv" style="--d:.46s"><span class="no">3</span><span class="txt"><b>School — San Agustín</b><s>still in the group chat</s></span><span class="val" data-count="16">0</span></div>
+      <div class="rank rv" style="--d:.58s"><span class="no">4</span><span class="txt"><b>Work</b><s>colleagues who became contacts you keep</s></span><span class="val" data-count="15">0</span></div>
+      <div class="rank rv" style="--d:.7s"><span class="no">5</span><span class="txt"><b>Through Family</b><s>inherited, and kept on purpose</s></span><span class="val" data-count="13">0</span></div>
+    </div>
+    <p class="tiny rv" style="--d:.85s">Plus entrepreneurship, Mundolingo, Bumble BFF, two universities, a conservatory and a college.</p>
+  </section>
+
+  <!-- ══════════ 08 · GRINDR ══════════ -->
+  <section class="slide" style="--bg:#0d0d0d;--fg:#fff;--acc:#ffcf00">
+    <div class="blob" style="width:74%;aspect-ratio:1;background:#ffcf00;top:-26%;right:-28%;opacity:.28"></div>
+    <p class="kicker rv">Runner-up spotlight</p>
+    <h2 class="head rv" style="--d:.1s">1 in every 6 people<br>you know started as<br><span class="hl">a grid tile.</span></h2>
+    <div class="grid rv" style="--d:.32s;margin-top:clamp(6px,1.4vh,14px)">
+      <div class="cell"><strong data-count="21">0</strong><span>people</span></div>
+      <div class="cell"><strong data-count="8">0</strong><span>nationalities</span></div>
+      <div class="cell"><strong data-count="6">0</strong><span>cities, 3 countries</span></div>
+      <div class="cell"><strong data-count="14">0</strong><span>moved to Instagram</span></div>
+    </div>
+    <p class="sub rv" style="--d:.5s;max-width:29ch">
+      Two-thirds of them graduated to a follow. Toronto, Caracas, Montreal, Margarita, Buenos Aires, St Catherines — the app walked so the friendships could run.
+    </p>
+    <p class="tiny rv" style="--d:.66s">Zero of them are still just a grid tile.</p>
+  </section>
+
+  <!-- ══════════ 09 · SAN AGUSTÍN ══════════ -->
+  <section class="slide" style="--bg:#2d6cdf;--fg:#fff;--acc:#ffd166">
+    <div class="blob" style="width:72%;aspect-ratio:1;background:#7aa5ff;bottom:-24%;left:-24%;opacity:.5"></div>
+    <p class="kicker rv">Longest-running streak</p>
+    <h2 class="head rv" style="--d:.1s">San Agustín,<br><span class="hl">16 classmates</span>,<br>7 cities.</h2>
+    <p class="sub rv" style="--d:.3s;max-width:29ch">
+      Nine never left Caracas. The rest are in Chicago, Madeira, Turks &amp; Caicos, Orlando, the Canary Islands and Buenos Aires — and you still know exactly where each one is.
+    </p>
+    <div class="chips rv" style="--d:.46s">
+      <span class="chip hot">Caracas 9</span><span class="chip hot">Chicago 2</span><span class="chip">Madeira</span>
+      <span class="chip">Turks &amp; Caicos</span><span class="chip">Orlando</span><span class="chip">Canary Islands</span><span class="chip">Buenos Aires</span>
+    </div>
+    <p class="tiny rv" style="--d:.6s">School friends aren't supposed to survive a continent change. Yours did.</p>
+  </section>
+
+  <!-- ══════════ 10 · PLATFORMS ══════════ -->
+  <section class="slide" style="--bg:#f5f1e6;--fg:#141414;--acc:#e1306c">
+    <div class="blob" style="width:60%;aspect-ratio:1;background:#ffd6e7;top:-14%;right:-18%;opacity:.8"></div>
+    <p class="kicker rv">Where the conversation lives</p>
+    <h2 class="head rv" style="--d:.08s">Instagram took<br>the crown.</h2>
+    <div class="donut rv" style="--d:.24s;margin-top:clamp(4px,1.2vh,12px)">
+      <svg viewBox="0 0 42 42" aria-hidden="true">
+        <circle cx="21" cy="21" r="15.9" stroke="#eadfd0" style="--dash:100 0;--off:0"></circle>
+        <circle cx="21" cy="21" r="15.9" stroke="#e1306c" style="--dash:46.7 100;--off:0;--d:.35s"></circle>
+        <circle cx="21" cy="21" r="15.9" stroke="#25d366" style="--dash:38.5 100;--off:-46.7;--d:.5s"></circle>
+        <circle cx="21" cy="21" r="15.9" stroke="#4a154b" style="--dash:10.7 100;--off:-85.2;--d:.65s"></circle>
+        <circle cx="21" cy="21" r="15.9" stroke="#141414" style="--dash:4.1 100;--off:-95.9;--d:.78s"></circle>
+      </svg>
+      <ul class="legend">
+        <li><i style="background:#e1306c"></i>Instagram<s>57</s></li>
+        <li><i style="background:#25d366"></i>WhatsApp<s>47</s></li>
+        <li><i style="background:#4a154b"></i>Slack<s>13</s></li>
+        <li><i style="background:#141414"></i>IRL &amp; other<s>5</s></li>
+      </ul>
+    </div>
+    <p class="sub rv" style="--d:.9s;max-width:30ch">
+      WhatsApp is where family and Caracas live. Instagram is where everyone you met after 2015 lives. Slack is, and always will be, work.
+    </p>
+    <p class="tiny rv" style="--d:1s">One person is still on Facebook. One is a phone call. Three refuse to be anything but in person.</p>
+  </section>
+
+  <!-- ══════════ 11 · DISTANCE ══════════ -->
+  <section class="slide" style="--bg:#050b1f;--fg:#fff;--acc:#4cc9f0">
+    <div class="blob" style="width:80%;aspect-ratio:1;background:#3a0ca3;top:-22%;left:-26%;opacity:.6"></div>
+    <div class="blob" style="width:50%;aspect-ratio:1;background:#4cc9f0;bottom:-14%;right:-16%;opacity:.35"></div>
+    <p class="kicker rv">Add up every friendship</p>
+    <div class="mega pop" data-count="361099" style="--d:.14s;font-size:clamp(46px,15vw,110px)">0</div>
+    <h2 class="head rv" style="--d:.36s;font-size:clamp(22px,6.4vw,38px)">kilometres between you<br>and your people.</h2>
+    <p class="sub rv" style="--d:.5s;max-width:28ch">
+      That's <span class="hl">9 laps around the Earth</span> — or 94% of the way to the Moon.
+    </p>
+    <div class="grid rv" style="--d:.66s">
+      <div class="cell"><strong data-count="9462">0</strong><span>km · Joel Saltron, Bariloche — farthest</span></div>
+      <div class="cell"><strong data-count="55">0</strong><span>km · Nick Loch, St Catherines — closest</span></div>
+      <div class="cell wide"><strong data-count="34772">0</strong><span>km to visit all 24 cities in one loop — 87% of the way around the planet</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 12 · AWARDS ══════════ -->
+  <section class="slide" style="--bg:#6a09b7;--fg:#fff;--acc:#f9f871">
+    <div class="blob" style="width:70%;aspect-ratio:1;background:#f72585;bottom:-22%;right:-24%;opacity:.6"></div>
+    <p class="kicker rv">Superlatives</p>
+    <h2 class="head rv" style="--d:.08s">The awards<br>ceremony</h2>
+    <div style="margin-top:clamp(4px,1.2vh,12px)">
+      <div class="rank rv" style="--d:.24s;border-color:rgba(255,255,255,.2)"><span class="no emoji">🏆</span><span class="txt"><b>David Vivas</b><s>Most passports · Venezuelan, Canadian &amp; Spanish</s></span></div>
+      <div class="rank rv" style="--d:.36s;border-color:rgba(255,255,255,.2)"><span class="no emoji">🌎</span><span class="txt"><b>Joel Saltron</b><s>Furthest flung · Bariloche, Patagonia</s></span></div>
+      <div class="rank rv" style="--d:.48s;border-color:rgba(255,255,255,.2)"><span class="no emoji">🏝️</span><span class="txt"><b>Fran Marinaro</b><s>Best relocation · Caracas → Turks &amp; Caicos</s></span></div>
+      <div class="rank rv" style="--d:.6s;border-color:rgba(255,255,255,.2)"><span class="no emoji">💬</span><span class="txt"><b>The Slack 13</b><s>An entire team that never left the workspace</s></span></div>
+      <div class="rank rv" style="--d:.72s;border-color:transparent"><span class="no emoji">❓</span><span class="txt"><b>Vanesa Carrasco</b><s>How you met is recorded only as "222"</s></span></div>
+    </div>
+    <p class="tiny rv" style="--d:.86s">222 remains the single greatest unsolved mystery in this dataset.</p>
+  </section>
+
+  <!-- ══════════ 13 · PERSONA ══════════ -->
+  <section class="slide" style="--bg:#0a0618;--fg:#fff;--acc:#ff2fa0">
+    <div class="blob" style="width:74%;aspect-ratio:1;background:#7b2cff;top:-20%;right:-24%;opacity:.6"></div>
+    <div class="blob" style="width:64%;aspect-ratio:1;background:#ff2fa0;bottom:-18%;left:-22%;opacity:.5"></div>
+    <p class="kicker rv">Your connection personality is</p>
+    <h2 class="head rv" style="--d:.14s;font-size:clamp(38px,11.5vw,72px);letter-spacing:-.05em">
+      The<br><span class="hl">Diaspora<br>Hub</span>
+    </h2>
+    <p class="sub rv" style="--d:.36s;max-width:28ch">
+      You are the fixed point in a network that scattered. One in four of your people no longer lives in the city you met them in — and not one of them fell off the list.
+    </p>
+    <div class="chips rv" style="--d:.5s">
+      <span class="chip hot">Anchored in Toronto</span><span class="chip">Rooted in Caracas</span>
+      <span class="chip">Fluent in 3 continents</span><span class="chip">Loyal past the departure gate</span>
+    </div>
+    <p class="tiny rv" style="--d:.64s">Almost nobody keeps a spreadsheet of everyone they love. You do.</p>
+  </section>
+
+  <!-- ══════════ 14 · FINAL CARD ══════════ -->
+  <section class="slide" style="--bg:#08080f;--fg:#fff;--acc:#d8ff3e">
+    <div class="blob" style="width:60%;aspect-ratio:1;background:#ff2fa0;top:-16%;left:-18%;opacity:.45"></div>
+    <div class="blob" style="width:56%;aspect-ratio:1;background:#4de3ff;bottom:-14%;right:-16%;opacity:.35"></div>
+    <p class="kicker rv">Simon's Birthday Wrapped</p>
+    <div class="grid rv" style="--d:.16s">
+      <div class="cell"><strong>122</strong><span>people</span></div>
+      <div class="cell"><strong>17</strong><span>nationalities</span></div>
+      <div class="cell"><strong>24</strong><span>cities</span></div>
+      <div class="cell"><strong>11</strong><span>countries</span></div>
+      <div class="cell"><strong>16</strong><span>ways of meeting</span></div>
+      <div class="cell"><strong>361k</strong><span>km of friendship</span></div>
+      <div class="cell wide"><strong>Through Friends</strong><span>your #1 way in · 34 people arrived this way</span></div>
+    </div>
+    <div class="marq rv" style="--d:.4s;margin-top:clamp(6px,1.4vh,12px)"><div id="mq1"></div></div>
+    <div class="marq rev rv" style="--d:.48s"><div id="mq2"></div></div>
+    <p class="sub rv" style="--d:.58s;max-width:28ch;margin-top:clamp(4px,1vh,10px)">
+      Happy birthday. Look at how many people you collected on the way here.
+    </p>
+    <button class="replay rv" style="--d:.7s" id="replay">Play it again ↺</button>
+  </section>
+
+  <button class="zone prev" id="zPrev" aria-label="Previous"></button>
+  <button class="zone next" id="zNext" aria-label="Next"></button>
+  <button id="start">Tap to start ▸</button>
+  <div id="lang"><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
+  <div id="hud"><span id="hudTxt"></span></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   DATA
+   ════════════════════════════════════════════ */
+const CITIES = [
+  ["Toronto",43.65,-79.38,46],["Caracas",10.49,-66.88,26],["Buenos Aires",-34.60,-58.38,15],
+  ["Montreal",45.50,-73.57,4],["Madrid",40.42,-3.70,4],["Louisville",38.25,-85.76,4],
+  ["Genova",44.41,8.93,3],["Santiago",-33.45,-70.67,2],["Margarita",10.99,-63.87,2],
+  ["Chicago",41.88,-87.63,2],["St Catherines",43.16,-79.25,1],["Santander",43.46,-3.81,1],
+  ["Madeira",32.65,-16.91,1],["Turks & Caicos",21.69,-71.80,1],["Valencia",10.16,-68.01,1],
+  ["Ottawa",45.42,-75.70,1],["Orlando",28.54,-81.38,1],["Canary Islands",28.29,-16.62,1],
+  ["Washington",38.91,-77.04,1],["Bogotá",4.71,-74.07,1],["Kitchener",43.45,-80.49,1],
+  ["Medellín",6.24,-75.58,1],["London",51.51,-0.13,1],["Bariloche",-41.13,-71.31,1]
+];
+const NAMES = "Vanesa Carrasco,Johan Carrero,Johann Marquez,Ken Yang,Daniel Montemiglio,Fernando Yanez,Simon Jose Bermudez,Magally Huise,Diana Hernandez,Daniel Bermudez,Carlos Montanes,Roman Girka,Eliecer Pedroza,Yeijo,Diego Basto,Anton Vivone,Angel Quijada,Nick Loch,Zaid,Erick William Biard-Goble,Alexandre Martel,Ender Nava,Joey Jrv,Fabio Filipe,Francisco Soul,Logan,Abraham Martinez,Arturo Bilbao,Alexander Bernic,Luis Oliveira,Randy Milan,Doug Church,Lucas Lima,Franco Perez,Hector Gonzalez,Ernesto Mendible,Bruno Colmenares,Alexis Fraudita,Juan Pestana,Jesús Hernández,Fran Marinaro,Luis Jimenez,Luis Emiro,David Cabrera,Garfei Jung,Johandry Gonzalez,Joel Cazu,Rosty Bruce,Alexia García,Gilberto L Morillo,Sileida Montes,María Schiavi,Andrea Igliozzi,Oscar Ronderos,Alirio Rodriguez,Carlos Marcano,Connie,Grissel,Felix Romero,Santiago Aranguren,Robert Williams,Jose Luis Malave,Norma Hannant,Emma Rivero,Nancy Requena,Simon Gonzalez,Alberto Gil,Angela Calle,Daniela Pagavino,Yuri Calcaño,Carlos Torrens,Rachel,Yuri Girka,Facu Ranieri,Eskeiver,Jose Gomez,Miguel Dieppa,Marcel Lahoud,Erick Letondeur,Sophia Marquez,Thian Florentín,Franye Ortiz,Roberto Lahoud,Juan Acevedo,Jose Useche,Alice Trejo,Ivan Trost,Gregory Simao,David Vivas,Romario Restrepo,Andrés Camacho,Silvia Podestá,Rey de la Victoria,Pedro Soares,Victor Santiago Pocaterra,Giana Infante,Luis Bellorín,Alfonso Sanchez,Juan Lopez,Hugo Wunder,Nic Svi,Carlos Mir,Joel Saltron,Carlos Mogollón,Javier Silva,Gioneifer Noriega,Karolina Franca,Francisco Vivas,Fahreen Walimohamed,Alden Ozburn,Mel Lurz,Mairi McGowan,Muntaha Sakhi,Todd MacAinsh,David Ly,Jason Rivers,Nick Chepesiuk,Nick Mateshko,Storm Kaefer,Kseniia Yatsuk,Fran,Christine".split(",");
+
+/* ════════════════════════════════════════════
+   MARQUEE
+   ════════════════════════════════════════════ */
+(function(){
+  const half = Math.ceil(NAMES.length/2);
+  const build = (list,el)=>{
+    const html = list.map(n=>`<span>${n}</span><span>✦</span>`).join("");
+    el.innerHTML = html+html;
+  };
+  build(NAMES.slice(0,half), mq1);
+  build(NAMES.slice(half), mq2);
+})();
+
+/* ════════════════════════════════════════════
+   STORY ENGINE
+   ════════════════════════════════════════════ */
+const slides = [...document.querySelectorAll(".slide")];
+const barsEl = document.getElementById("bars");
+const hudTxt = document.getElementById("hudTxt");
+const startBtn = document.getElementById("start");
+const DUR = 8200;
+let idx = -1, timer = null, running = false;
+
+slides.forEach(()=>barsEl.insertAdjacentHTML("beforeend","<i></i>"));
+const bars = [...barsEl.children];
+
+function animateCounts(slide){
+  slide.querySelectorAll("[data-count]").forEach(el=>{
+    const target = +el.dataset.count;
+    const delay = 260;
+    el.textContent = "0";
+    const t0 = performance.now() + delay;
+    const dur = target > 5000 ? 1900 : 1300;
+    (function step(now){
+      const p = Math.min(1, Math.max(0,(now - t0)/dur));
+      const e = 1 - Math.pow(1-p, 3);
+      el.textContent = Math.round(target*e)
+        .toLocaleString(document.documentElement.lang === "es" ? "es-ES" : "en-US");
+      if(p < 1 && el.isConnected) requestAnimationFrame(step);
+    })(performance.now());
+  });
+}
+
+function go(i, autoplay = running){
+  if(i < 0 || i >= slides.length) return;
+  if(idx >= 0) slides[idx].classList.remove("on");
+  idx = i;
+  const s = slides[idx];
+  // force reflow so reveal transitions restart cleanly
+  void s.offsetWidth;
+  s.classList.add("on");
+  animateCounts(s);
+
+  bars.forEach((b,n)=>{
+    b.className = n < idx ? "done" : "";
+    b.style.removeProperty("--dur");
+  });
+  hudTxt.textContent = `${idx+1} / ${slides.length}`;
+  globeActive = (s.id === "s-globe");
+
+  clearTimeout(timer);
+  if(autoplay){
+    const bar = bars[idx];
+    bar.classList.add("live","paused");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      bar.style.setProperty("--dur", DUR+"ms");
+      bar.classList.remove("paused");
+    }));
+    if(idx < slides.length-1) timer = setTimeout(()=>go(idx+1), DUR);
+  }
+}
+
+function start(){
+  running = true;
+  startBtn.style.display = "none";
+  go(0, true);
+}
+function next(){ if(idx < slides.length-1) go(idx+1); else { clearTimeout(timer); } }
+function prev(){ if(idx > 0) go(idx-1); }
+
+document.getElementById("zNext").addEventListener("click", ()=> running ? next() : start());
+document.getElementById("zPrev").addEventListener("click", ()=> running ? prev() : start());
+startBtn.addEventListener("click", start);
+document.getElementById("replay").addEventListener("click", e=>{ e.stopPropagation(); go(0, true); });
+
+addEventListener("keydown", e=>{
+  if(e.key === "ArrowRight" || e.key === " "){ e.preventDefault(); running ? next() : start(); }
+  if(e.key === "ArrowLeft") prev();
+});
+
+// hold to pause
+let holdTimer = null;
+const stage = document.getElementById("app");
+const pause = ()=>{ clearTimeout(timer); bars[idx]?.classList.add("paused"); };
+stage.addEventListener("pointerdown", ()=>{ holdTimer = setTimeout(()=>{ holdTimer = "held"; pause(); }, 320); });
+stage.addEventListener("pointerup", ()=>{ if(holdTimer === "held"){ holdTimer = null; go(idx, running); } else clearTimeout(holdTimer); });
+
+// swipe
+let sx = 0;
+stage.addEventListener("touchstart", e=>{ sx = e.changedTouches[0].clientX; }, {passive:true});
+stage.addEventListener("touchend", e=>{
+  const dx = e.changedTouches[0].clientX - sx;
+  if(Math.abs(dx) > 60){ dx < 0 ? next() : prev(); }
+}, {passive:true});
+
+/* ════════════════════════════════════════════
+   GLOBE — orthographic dot sphere + great-circle arcs
+   ════════════════════════════════════════════ */
+const cvs = document.getElementById("globe");
+const ctx = cvs.getContext("2d");
+let globeActive = false, W = 0, H = 0, R = 0, cx = 0, cy = 0, DPR = 1;
+
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  const r = cvs.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cvs.width = W*DPR; cvs.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  R = Math.min(W, H*0.62) * 0.46;
+  cx = W/2; cy = H*0.53;
+}
+addEventListener("resize", resize);
+
+const D2R = Math.PI/180;
+function vec(lat, lon){
+  const p = lat*D2R, l = lon*D2R;
+  return [Math.cos(p)*Math.sin(l), Math.sin(p), Math.cos(p)*Math.cos(l)];
+}
+function rotY(v, a){
+  const c = Math.cos(a), s = Math.sin(a);
+  return [v[0]*c + v[2]*s, v[1], -v[0]*s + v[2]*c];
+}
+function rotX(v, a){
+  const c = Math.cos(a), s = Math.sin(a);
+  return [v[0], v[1]*c - v[2]*s, v[1]*s + v[2]*c];
+}
+function project(v, spin, tilt){
+  const w = rotX(rotY(v, spin), tilt);
+  return [cx + w[0]*R, cy - w[1]*R, w[2]];  // z>0 = facing us
+}
+function slerp(a, b, t){
+  let d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  d = Math.max(-1, Math.min(1, d));
+  const o = Math.acos(d);
+  if(o < 1e-6) return a;
+  const s = Math.sin(o), k1 = Math.sin((1-t)*o)/s, k2 = Math.sin(t*o)/s;
+  return [a[0]*k1+b[0]*k2, a[1]*k1+b[1]*k2, a[2]*k1+b[2]*k2];
+}
+
+// pre-compute lattice of surface dots
+const LATTICE = [];
+for(let lat = -84; lat <= 84; lat += 4){
+  const circ = Math.cos(lat*D2R);
+  const n = Math.max(8, Math.round(96*circ));
+  for(let i = 0; i < n; i++) LATTICE.push(vec(lat, (i/n)*360 - 180));
+}
+// City names that differ in Spanish; everything else is a proper noun either way.
+const CITY_ES = {
+  "Turks & Caicos":"Turcas y Caicos", "Canary Islands":"Islas Canarias",
+  "Genova":"Génova", "London":"Londres",
+};
+const cityLabel = n => (document.documentElement.lang === "es" && CITY_ES[n]) || n;
+
+const TOR = vec(43.65, -79.38);
+const NODES = CITIES.map(c => ({ name:c[0], v:vec(c[1],c[2]), n:c[3] }));
+const ARCS = NODES.filter(n => n.name !== "Toronto").map(n => {
+  const pts = [];
+  for(let i = 0; i <= 40; i++) pts.push(slerp(TOR, n.v, i/40));
+  return pts;
+});
+
+let spin = 0.95;  // starts with the Americas facing the viewer
+function draw(t){
+  requestAnimationFrame(draw);
+  if(!globeActive || !W) return;
+  spin += 0.0016;
+  const tilt = -0.30;
+  ctx.clearRect(0,0,W,H);
+
+  // atmosphere
+  const g = ctx.createRadialGradient(cx,cy,R*0.75,cx,cy,R*1.5);
+  g.addColorStop(0,"rgba(77,227,255,.18)");
+  g.addColorStop(1,"rgba(77,227,255,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.5,0,7); ctx.fill();
+
+  // sphere body
+  ctx.fillStyle = "rgba(8,16,34,.85)";
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fill();
+
+  // lattice dots
+  for(const v of LATTICE){
+    const p = project(v, spin, tilt);
+    if(p[2] <= 0.02) continue;
+    ctx.fillStyle = `rgba(126,199,235,${0.10 + p[2]*0.40})`;
+    ctx.fillRect(p[0]-0.9, p[1]-0.9, 1.8, 1.8);
+  }
+
+  // rim light
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = "rgba(77,227,255,.30)";
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.stroke();
+
+  // arcs
+  ctx.lineWidth = 1.2;
+  for(const pts of ARCS){
+    ctx.beginPath();
+    let drawing = false;
+    for(let i = 0; i < pts.length; i++){
+      const p = project(pts[i], spin, tilt);
+      if(p[2] > 0){
+        if(!drawing){ ctx.moveTo(p[0],p[1]); drawing = true; }
+        else ctx.lineTo(p[0],p[1]);
+      } else drawing = false;
+    }
+    ctx.strokeStyle = "rgba(77,227,255,.55)";
+    ctx.stroke();
+  }
+
+  // travelling pulses
+  const ph = (t % 3200)/3200;
+  for(let k = 0; k < ARCS.length; k++){
+    const pts = ARCS[k];
+    const f = (ph + k/ARCS.length) % 1;
+    const p = project(pts[Math.floor(f*(pts.length-1))], spin, tilt);
+    if(p[2] <= 0) continue;
+    ctx.fillStyle = "rgba(216,255,62,.9)";
+    ctx.beginPath(); ctx.arc(p[0],p[1],1.9,0,7); ctx.fill();
+  }
+
+  // city nodes — biggest hub drawn last so it always reads on top
+  const FONT = '700 11px ' + getComputedStyle(document.body).fontFamily;
+  const vis = [];
+  for(const nd of NODES){
+    const p = project(nd.v, spin, tilt);
+    if(p[2] <= 0) continue;
+    vis.push({nd, p, r: 1.6 + Math.sqrt(nd.n)*0.95, isTor: nd.name === "Toronto"});
+  }
+  vis.sort((a,b)=> a.nd.n - b.nd.n);
+  for(const {nd,p,r,isTor} of vis){
+    const a = 0.4 + p[2]*0.6;
+    ctx.fillStyle = isTor ? `rgba(216,255,62,${a*0.22})` : `rgba(77,227,255,${a*0.16})`;
+    ctx.beginPath(); ctx.arc(p[0],p[1],r*2.6,0,7); ctx.fill();
+    ctx.fillStyle = isTor ? `rgba(216,255,62,${a})` : `rgba(255,255,255,${a})`;
+    ctx.beginPath(); ctx.arc(p[0],p[1],r,0,7); ctx.fill();
+  }
+
+  // labels: greedy placement, hubs claim their space first
+  ctx.font = FONT;
+  ctx.lineWidth = 3.2;
+  const taken = [];
+  for(const {nd,p,r,isTor} of vis.slice().reverse()){
+    if(p[2] <= 0.26) continue;
+    const label = cityLabel(nd.name);
+    const w = ctx.measureText(label).width;
+    const x = p[0] + r + 6, y = p[1] + 4;
+    const box = [x-2, y-10, x+w+2, y+4];
+    if(taken.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+    taken.push(box);
+    const la = Math.min(1,(p[2]-0.26)*2.6);
+    ctx.strokeStyle = `rgba(3,6,15,${la*0.9})`;
+    ctx.strokeText(label, x, y);
+    ctx.fillStyle = isTor ? `rgba(216,255,62,${la})` : `rgba(255,255,255,${la*0.9})`;
+    ctx.fillText(label, x, y);
+  }
+}
+resize();
+requestAnimationFrame(draw);
+new ResizeObserver(resize).observe(cvs);
+
+/* ════════════════════════════════════════════
+   i18n — English source of truth lives in the markup above;
+   Spanish is keyed by the normalised English string.
+   ════════════════════════════════════════════ */
+const ES = {
+  // 01 cover
+  "A birthday special edition": "Edición especial de cumpleaños",
+  'Simon\'s<br><span class="hl">Wrapped</span>': 'El <span class="hl">Wrapped</span><br>de Simon',
+  "122 people. Every one of them a reason today is worth celebrating.":
+    "122 personas. Cada una de ellas una razón para celebrar hoy.",
+  "Tap right to advance · left to go back":
+    "Toca a la derecha para avanzar · a la izquierda para volver",
+  // 02
+  "This year you counted": "Este año contaste",
+  "people who made<br>the list.": "personas que<br>entraron en la lista.",
+  "Not followers. Not contacts. People you can place — where you met, how you met, and where they are now.":
+    "No son seguidores. No son contactos. Son personas que puedes ubicar: dónde se conocieron, cómo se conocieron y dónde están ahora.",
+  "That's a village, not a network.": "Eso es un pueblo, no una red de contactos.",
+  // 03 globe
+  "Your people are currently in": "Tu gente está ahora mismo en",
+  '<span class="hl" data-count="24">0</span> cities.<br> <span class="hl" data-count="11">0</span> countries.<br> <span class="hl" data-count="3">0</span> continents.':
+    '<span class="hl" data-count="24">0</span> ciudades.<br> <span class="hl" data-count="11">0</span> países.<br> <span class="hl" data-count="3">0</span> continentes.',
+  "Every line runs back to Toronto. Every dot is somebody who'd pick up.":
+    "Cada línea vuelve a Toronto. Cada punto es alguien que te contestaría.",
+  "North America 62 · South America 49 · Europe 11": "Norteamérica 62 · Sudamérica 49 · Europa 11",
+  // 04 passports
+  "Passports in the room": "Pasaportes en la sala",
+  '<span class="hl" data-count="17">0</span> nationalities': '<span class="hl" data-count="17">0</span> nacionalidades',
+  "Venezuelan": "Venezolana", "Canadian": "Canadiense",
+  "Portuguese · Brazilian · Argentinian": "Portuguesa · Brasileña · Argentina",
+  "Colombian": "Colombiana",
+  "Peruvian · Spanish · Ukrainian · Mexican · Panamanian": "Peruana · Española · Ucraniana · Mexicana · Panameña",
+  "And six people are the only one of their kind here — <em>German</em> <em>Chinese</em> <em>American</em> <em>Paraguayan</em> <em>Italian</em> <em>English</em>.":
+    "Y seis personas son las únicas de su tipo aquí — <em>Alemana</em> <em>China</em> <em>Estadounidense</em> <em>Paraguaya</em> <em>Italiana</em> <em>Inglesa</em>.",
+  "10 of them carry more than one passport. David Vivas carries three.":
+    "10 de ellos tienen más de un pasaporte. David Vivas tiene tres.",
+  // 05 cities
+  "Home base rankings": "Ranking de bases",
+  'Three cities hold<br><span data-count="71">0</span>% of everyone.':
+    'Tres ciudades concentran<br>al <span data-count="71">0</span>% de todos.',
+  "Genova": "Génova",
+  "The other 21 cities hold one or two people each — the long tail of a life that moved.":
+    "Las otras 21 ciudades tienen una o dos personas cada una: la cola larga de una vida que se mudó.",
+  // 06 diaspora
+  "The scatter plot of your life": "El diagrama de dispersión de tu vida",
+  'You met <span class="hl">47</span> people in Caracas.<br><span class="hl" data-count="21">0</span> of them have left.':
+    'Conociste a <span class="hl">47</span> personas en Caracas.<br><span class="hl" data-count="21">0</span> ya se fueron.',
+  "They landed in twelve different cities. Buenos Aires took six. Madrid took three. Genova and Chicago took two each.":
+    "Aterrizaron en doce ciudades distintas. Buenos Aires se llevó seis. Madrid, tres. Génova y Chicago, dos cada una.",
+  "Genova 2": "Génova 2", "Turks &amp; Caicos": "Turcas y Caicos", "Canary Islands": "Islas Canarias",
+  "Venezuelans now living abroad": "venezolanos viviendo fuera",
+  "countries they landed in": "países donde aterrizaron",
+  "A generation left. You kept every single number.": "Una generación se fue. Tú guardaste todos los números.",
+  // 07 top 5
+  "Your top channels of": "Tus principales vías de",
+  "How we met": "Cómo nos conocimos",
+  "Through Friends": "Por amigos",
+  "the compounding interest of being liked": "el interés compuesto de caer bien",
+  "started as a swipe, stayed as a person": "empezó como un match y se quedó como persona",
+  "School — San Agustín": "Colegio — San Agustín",
+  "still in the group chat": "todavía en el grupo de chat",
+  "Work": "Trabajo",
+  "colleagues who became contacts you keep": "colegas que se volvieron contactos que conservas",
+  "Through Family": "Por familia",
+  "inherited, and kept on purpose": "heredados, y conservados a propósito",
+  "Plus entrepreneurship, Mundolingo, Bumble BFF, two universities, a conservatory and a college.":
+    "Más emprendimiento, Mundolingo, Bumble BFF, dos universidades, un conservatorio y un instituto.",
+  // 08 grindr
+  "Runner-up spotlight": "El segundo lugar",
+  '1 in every 6 people<br>you know started as<br><span class="hl">a grid tile.</span>':
+    '1 de cada 6 personas<br>que conoces empezó<br>como <span class="hl">un cuadrito.</span>',
+  "people": "personas", "nationalities": "nacionalidades",
+  "cities, 3 countries": "ciudades, 3 países", "moved to Instagram": "pasaron a Instagram",
+  "Two-thirds of them graduated to a follow. Toronto, Caracas, Montreal, Margarita, Buenos Aires, St Catherines — the app walked so the friendships could run.":
+    "Dos tercios se graduaron a un follow. Toronto, Caracas, Montreal, Margarita, Buenos Aires, St Catherines: la app caminó para que las amistades corrieran.",
+  "Zero of them are still just a grid tile.": "Ninguno sigue siendo solo un cuadrito.",
+  // 09 school
+  "Longest-running streak": "La racha más larga",
+  'San Agustín,<br><span class="hl">16 classmates</span>,<br>7 cities.':
+    'San Agustín,<br><span class="hl">16 compañeros</span>,<br>7 ciudades.',
+  "Nine never left Caracas. The rest are in Chicago, Madeira, Turks &amp; Caicos, Orlando, the Canary Islands and Buenos Aires — and you still know exactly where each one is.":
+    "Nueve nunca salieron de Caracas. El resto está en Chicago, Madeira, Turcas y Caicos, Orlando, las Islas Canarias y Buenos Aires — y todavía sabes exactamente dónde está cada uno.",
+  "School friends aren't supposed to survive a continent change. Yours did.":
+    "Las amistades del colegio no deberían sobrevivir a un cambio de continente. Las tuyas sí.",
+  // 10 platforms
+  "Where the conversation lives": "Dónde vive la conversación",
+  "Instagram took<br>the crown.": "Instagram se llevó<br>la corona.",
+  '<i style="background:#141414"></i>IRL &amp; other<s>5</s>': '<i style="background:#141414"></i>En persona y otros<s>5</s>',
+  "WhatsApp is where family and Caracas live. Instagram is where everyone you met after 2015 lives. Slack is, and always will be, work.":
+    "WhatsApp es donde viven la familia y Caracas. Instagram es donde vive todo el que conociste después de 2015. Slack es, y siempre será, el trabajo.",
+  "One person is still on Facebook. One is a phone call. Three refuse to be anything but in person.":
+    "Una persona sigue en Facebook. Una es una llamada. Tres se niegan a ser algo que no sea en persona.",
+  // 11 distance
+  "Add up every friendship": "Suma cada amistad",
+  "kilometres between you<br>and your people.": "kilómetros entre tú<br>y tu gente.",
+  'That\'s <span class="hl">9 laps around the Earth</span> — or 94% of the way to the Moon.':
+    'Son <span class="hl">9 vueltas a la Tierra</span> — o el 94% del camino a la Luna.',
+  "km · Joel Saltron, Bariloche — farthest": "km · Joel Saltron, Bariloche — el más lejos",
+  "km · Nick Loch, St Catherines — closest": "km · Nick Loch, St Catherines — el más cerca",
+  "km to visit all 24 cities in one loop — 87% of the way around the planet":
+    "km para visitar las 24 ciudades en una vuelta — el 87% del planeta",
+  // 12 awards
+  "Superlatives": "Superlativos",
+  "The awards<br>ceremony": "La ceremonia<br>de premios",
+  "Most passports · Venezuelan, Canadian &amp; Spanish": "Más pasaportes · venezolano, canadiense y español",
+  "Furthest flung · Bariloche, Patagonia": "El más lejano · Bariloche, Patagonia",
+  "Best relocation · Caracas → Turks &amp; Caicos": "Mejor mudanza · Caracas → Turcas y Caicos",
+  "The Slack 13": "Los 13 de Slack",
+  "An entire team that never left the workspace": "Un equipo entero que nunca salió del workspace",
+  'How you met is recorded only as "222"': "Cómo se conocieron está registrado solo como «222»",
+  "222 remains the single greatest unsolved mystery in this dataset.":
+    "222 sigue siendo el mayor misterio sin resolver de este dataset.",
+  // 13 persona
+  "Your connection personality is": "Tu personalidad de conexión es",
+  'The<br><span class="hl">Diaspora<br>Hub</span>': 'El <span class="hl">Centro<br>de la Diáspora</span>',
+  "You are the fixed point in a network that scattered. One in four of your people no longer lives in the city you met them in — and not one of them fell off the list.":
+    "Eres el punto fijo de una red que se dispersó. Una de cada cuatro personas ya no vive en la ciudad donde la conociste — y ninguna se cayó de la lista.",
+  "Anchored in Toronto": "Anclado en Toronto", "Rooted in Caracas": "Con raíz en Caracas",
+  "Fluent in 3 continents": "Fluido en 3 continentes",
+  "Loyal past the departure gate": "Leal más allá de la puerta de embarque",
+  "Almost nobody keeps a spreadsheet of everyone they love. You do.":
+    "Casi nadie mantiene una hoja de cálculo con todos a quienes quiere. Tú sí.",
+  // 14 final
+  "Simon's Birthday Wrapped": "El Wrapped de cumpleaños de Simon",
+  "cities": "ciudades", "countries": "países",
+  "ways of meeting": "formas de conocerse", "km of friendship": "km de amistad",
+  "your #1 way in · 34 people arrived this way": "tu vía #1 · 34 personas llegaron así",
+  "Happy birthday. Look at how many people you collected on the way here.":
+    "Feliz cumpleaños. Mira cuánta gente reuniste en el camino hasta aquí.",
+  "Play it again ↺": "Reproducir otra vez ↺",
+  "Tap to start ▸": "Toca para empezar ▸",
+};
+const TITLE = { en: "Birthday Wrapped · Simon", es: "Wrapped de Cumpleaños · Simon" };
+
+const I18N_SEL = ".kicker,.head,.sub,.tiny,.bar > b,.rank .txt b,.rank .txt s," +
+                 ".cell > span,.cell.wide > strong:not([data-count]),.chip,.legend li,#replay,#start";
+// Captured before any counter runs, so `data-count` placeholders are still "0".
+const I18N = [...document.querySelectorAll(I18N_SEL)]
+  .map(el => ({ el, en: el.innerHTML.replace(/\s+/g," ").trim() }));
+
+function setLang(l){
+  document.documentElement.lang = l;
+  document.title = TITLE[l];
+  for(const {el, en} of I18N) el.innerHTML = (l === "es" && ES[en]) || en;
+  for(const b of langBtns) b.classList.toggle("on", b.dataset.lang === l);
+  try{ localStorage.setItem("bw-lang", l); }catch(e){}
+  if(idx >= 0) animateCounts(slides[idx]);   // counters were just re-rendered
+}
+
+const langBtns = [...document.querySelectorAll("#lang button")];
+langBtns.forEach(b => b.addEventListener("click", e => {
+  e.stopPropagation();
+  setLang(b.dataset.lang);
+}));
+document.getElementById("lang").addEventListener("pointerdown", e => e.stopPropagation());
+
+const qLang = new URLSearchParams(location.search).get("lang");
+let saved = null;
+try{ saved = localStorage.getItem("bw-lang"); }catch(e){}
+const auto = (navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
+setLang(qLang === "es" || qLang === "en" ? qLang : (saved || auto));
+
+/* show the cover immediately, paused until the user starts */
+go(0, false);
+</script>
+</body>
+</html>
